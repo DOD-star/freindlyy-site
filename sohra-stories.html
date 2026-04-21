@@ -12,36 +12,33 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma; }
         body { margin: 0; background: var(--dark); height: 100vh; overflow: hidden; color: white; display: flex; flex-direction: column; }
 
-        /* الهيدر */
-        .main-header { padding: 15px 25px; background: rgba(10, 10, 20, 0.9); border-bottom: 2px solid var(--neon); display: flex; justify-content: space-between; align-items: center; }
+        .main-header { padding: 15px 25px; background: #0a0a14; border-bottom: 2px solid var(--neon); display: flex; justify-content: space-between; align-items: center; }
 
-        /* الكراسي والاعبين */
         .chairs-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 20px; }
         .player-card { position: relative; width: 90px; text-align: center; transition: 0.3s; }
-        .avatar-frame { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #333; position: relative; background: #111; margin: 0 auto; transition: 0.3s; }
         
-        /* التعديل المطلوب: الأخضر للجاهز */
-        .player-card.is-ready .avatar-frame { border-color: var(--ready-color); box-shadow: 0 0 15px var(--ready-color); }
+        /* التعديل: الأخضر للجاهزية */
+        .avatar-frame { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #333; position: relative; background: #111; margin: 0 auto; }
+        .player-card.is-ready .avatar-frame { border-color: var(--ready-color) !important; box-shadow: 0 0 15px var(--ready-color); }
         .player-card.is-ready .p-name { color: var(--ready-color) !important; font-weight: bold; }
 
         .player-card.active .avatar-frame { border-color: var(--neon); box-shadow: 0 0 25px var(--neon); transform: scale(1.1); }
         .p-pfp { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         
-        .timer-bubble { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #ff3333; color: white; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 0.7rem; z-index: 10; }
+        .timer-bubble { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #ff3333; color: white; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 0.7rem; }
 
-        /* الشات وزيزو */
-        .chat-area { flex: 1; background: rgba(10,10,15,0.9); display: flex; flex-direction: column; border-right: 1px solid #222; }
+        .chat-area { flex: 1; background: rgba(0,0,0,0.5); display: flex; flex-direction: column; border-right: 1px solid #222; }
         #chat-msgs { flex: 1; overflow-y: auto; padding: 15px; }
-        .msg { margin-bottom: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.05); font-size: 0.85rem; }
-        .zi-msg { background: rgba(255, 0, 255, 0.1); border-right: 4px solid var(--pink); color: #ffccff; font-weight: bold; }
+        .msg { margin-bottom: 10px; padding: 10px; border-radius: 10px; background: #1a1a2e; border-right: 3px solid transparent; }
+        .zi-msg { border-right-color: var(--pink); background: rgba(255, 0, 255, 0.05); color: #ffccff; }
 
         .footer { padding: 15px; display: flex; gap: 10px; background: #000; }
-        input { flex: 1; background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; outline: none; }
-        .btn-ready { background: #333; color: white; border: none; border-radius: 10px; padding: 0 20px; cursor: pointer; font-weight: bold; }
-        .btn-ready.active { background: var(--ready-color); color: black; }
+        input { flex: 1; background: #111; border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; outline: none; }
+        
+        .btn-ready { background: #222; color: white; border: 1px solid #444; padding: 0 20px; border-radius: 10px; cursor: pointer; }
+        .btn-ready.active { background: var(--ready-color); color: black; border-color: var(--ready-color); }
 
-        /* أوفرلاي التصويت */
-        #vote-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; text-align: center; }
+        #vote-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
         #vote-overlay.show { display: flex; }
         .star-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--gold); background: none; color: var(--gold); font-weight: bold; cursor: pointer; margin: 5px; }
     </style>
@@ -49,15 +46,15 @@
 <body>
 
 <div id="vote-overlay">
-    <div id="winner-box" style="display:none;">
+    <div id="winner-ui" style="display:none; text-align:center;">
         <h1 id="win-name" style="font-size: 3rem; color: var(--neon);"></h1>
         <h2 style="color: var(--gold);">👑 حكواتي السهرة 👑</h2>
     </div>
-    <div id="vote-box">
-        <h2 id="vote-info" style="color: var(--gold);">قيم الحكاية ⭐</h2>
+    <div id="vote-ui" style="text-align:center;">
+        <h2 id="vote-info" style="color: var(--gold);">زيزو مستني التقييم ⭐</h2>
         <div id="stars"></div>
     </div>
-    <div id="cd-timer" style="font-size: 2rem; margin-top: 20px;"></div>
+    <div id="cd-timer" style="color:white; font-size:2rem; margin-top:20px;"></div>
 </div>
 
 <header class="main-header">
@@ -65,13 +62,13 @@
         <img id="u-pfp" src="" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--neon);">
         <span id="u-name"></span>
     </div>
-    <div style="color: var(--pink); font-weight: 900;">SOHRA COUNCIL 🕶️</div>
+    <div style="color: var(--pink); font-weight: bold; letter-spacing: 1px;">مجلس زيزو الشقي 🕶️</div>
 </header>
 
 <div style="display:flex; flex:1; overflow:hidden;">
     <div style="flex:2; display:flex; flex-direction:column; align-items:center; border-left:1px solid #222;">
         <div class="chairs-grid" id="chairs"></div>
-        <div id="word-display" style="display:none; padding:15px 30px; border:2px solid var(--gold); border-radius:15px; background:rgba(255,215,0,0.1);">
+        <div id="word-box" style="display:none; padding:15px; border:2px dashed var(--gold); border-radius:15px;">
             زيزو بيقولك الكلمة: <b id="target-word" style="font-size:2rem; color:var(--gold);"></b>
         </div>
     </div>
@@ -80,23 +77,24 @@
         <div id="chat-msgs"></div>
         <div class="footer">
             <button class="btn-ready" id="ready-btn">READY</button>
-            <input type="text" id="msg-in" placeholder="استنى لما زيزو يسمحلك..">
+            <input type="text" id="msg-in" placeholder="اسمع كلام زيزو...">
             <button onclick="sendMsg()" style="background:var(--neon); border:none; padding:10px 15px; border-radius:10px; cursor:pointer;">🚀</button>
         </div>
     </div>
 </div>
 
 <script>
+    // --- الربط (استخدم بياناتك) ---
     const firebaseConfig = { apiKey: "YOUR_API_KEY", databaseURL: "https://YOUR_PROJECT.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     const user = {
-        name: localStorage.getItem('user_name') || "مجهول",
+        name: localStorage.getItem('user_name') || "أسطورة",
         photo: localStorage.getItem('user_photo') || "https://api.dicebear.com/7.x/avataaars/svg?seed=1"
     };
 
-    const roomRef = db.ref('council_room/1000');
+    const roomRef = db.ref('sohra_council/room_1');
     const myRef = roomRef.child('players').child(user.name);
 
     document.getElementById('u-name').innerText = user.name;
@@ -105,16 +103,9 @@
     myRef.set({ ...user, ready: false, score: 0 });
     myRef.onDisconnect().remove();
 
-    // رسائل زيزو العصبية
-    const zizoInsults = [
-        "خلص يابني انت متصدعناش.. قفلنا الشات!",
-        "تؤتؤتؤ.. انت نوتي يا " + user.name + "، التزم بالدور!",
-        "اخلص يا " + user.name + " التايمر هيخلص وانت لسه بتفكر؟",
-        "المجلس ده مش للرغي.. زيزو مستني الحكاية!"
-    ];
-
-    function zizoSay(msg) {
-        roomRef.child('chat').push({ u: "زيزو الشقي 🕶️", m: msg, type: "zi" });
+    // دالة زيزو العصبي
+    function zizoSay(text) {
+        roomRef.child('chat').push({ u: "زيزو الشقي 🕶️", m: text, type: "zi" });
     }
 
     roomRef.on('value', (snap) => {
@@ -124,23 +115,23 @@
         const overlay = document.getElementById('vote-overlay');
         if(data.state === 'voting') {
             overlay.classList.add('show');
-            document.getElementById('vote-box').style.display = 'block';
-            document.getElementById('winner-box').style.display = 'none';
+            document.getElementById('vote-ui').style.display = 'block';
+            document.getElementById('winner-ui').style.display = 'none';
             renderStars(data.turn);
         } else if(data.state === 'cooldown') {
             overlay.classList.add('show');
-            document.getElementById('vote-box').style.display = 'none';
-            document.getElementById('winner-box').style.display = 'block';
+            document.getElementById('vote-ui').style.display = 'none';
+            document.getElementById('winner-ui').style.display = 'block';
             showWinner(data.players);
         } else {
             overlay.classList.remove('show');
         }
 
         if(data.state === 'playing') {
-            document.getElementById('word-display').style.display = 'block';
+            document.getElementById('word-box').style.display = 'block';
             document.getElementById('target-word').innerText = data.word;
         } else {
-            document.getElementById('word-display').style.display = 'none';
+            document.getElementById('word-box').style.display = 'none';
         }
     });
 
@@ -154,7 +145,7 @@
                 <div class="player-card ${isReady ? 'is-ready' : ''} ${isTurn ? 'active' : ''}">
                     ${isTurn ? `<div class="timer-bubble">${timeLeft}s</div>` : ''}
                     <div class="avatar-frame"><img src="${player.photo}" class="p-pfp"></div>
-                    <div class="p-name" style="font-size:0.75rem; margin-top:5px; color:#888;">${p}</div>
+                    <div class="p-name" style="font-size:0.75rem; margin-top:5px; color:#aaa;">${p}</div>
                 </div>`;
         });
     }
@@ -162,7 +153,7 @@
     document.getElementById('ready-btn').onclick = function() {
         const r = this.classList.toggle('active');
         myRef.update({ ready: r });
-        if(r) zizoSay("ايوه كده يا " + user.name + " خليك جاهز بدل ما اكرشك!");
+        if(r) zizoSay("ايوه كده يا " + user.name + " اجهز بدل ما اكرشك!");
     };
 
     let timer;
@@ -172,7 +163,7 @@
             let t = 300;
             timer = setInterval(() => {
                 t--; roomRef.update({ timeLeft: t });
-                if(t === 50) zizoSay("اخلص يا " + user.name + " فاضل 50 ثانية!");
+                if(t === 100) zizoSay("اخلص يا " + user.name + " صدعتنا.. فاضل 100 ثانية!");
                 if(t <= 0) { clearInterval(timer); sendMsg(); }
             }, 1000);
         }
@@ -180,8 +171,8 @@
 
     function sendMsg() {
         const inp = document.getElementById('msg-in');
-        if(!inp.value.trim()) {
-            zizoSay("تؤتؤتؤ.. انت نوتي يا " + user.name + " بتبعت هوا؟");
+        if(inp.value.length < 3) {
+            zizoSay("تؤتؤتؤ.. انت نوتي يا " + user.name + " بطل استظراف واكتب حكاية!");
             return;
         }
         clearInterval(timer);
@@ -193,20 +184,20 @@
     function renderStars(target) {
         const box = document.getElementById('stars'); box.innerHTML = '';
         if(user.name !== target) {
-            document.getElementById('vote-info').innerText = "قيم " + target + " بسرعة!";
+            document.getElementById('vote-info').innerText = "قيم حكاية " + target + " بسرعة!";
             for(let i=1; i<=10; i++) box.innerHTML += `<button class="star-btn" onclick="vote('${target}', ${i})">${i}</button>`;
         } else {
-            document.getElementById('vote-info').innerText = "المجلس بيقيمك.. ادعي زيزو يرضى عنك";
+            document.getElementById('vote-info').innerText = "المجلس بيقيمك.. ادعي زيزو يرضى عنك!";
         }
     }
 
     window.vote = (t, s) => {
-        db.ref(`council_room/1000/players/${t}/score`).transaction(v => (v||0) + s);
+        db.ref(`sohra_council/room_1/players/${t}/score`).transaction(v => (v||0) + s);
         roomRef.update({ state: 'cooldown' });
     };
 
     function showWinner(players) {
-        let top = { n: "لا أحد", s: -1 };
+        let top = { n: "محدش", s: -1 };
         Object.keys(players).forEach(p => { if(players[p].score > top.s) top = { n:p, s:players[p].score }; });
         document.getElementById('win-name').innerText = top.n;
         let c = 10;
@@ -217,7 +208,7 @@
                 roomRef.update({ state: 'waiting', turn: "", timeLeft: 300 });
                 myRef.update({ ready: false });
                 document.getElementById('ready-btn').classList.remove('active');
-                zizoSay("يلا متبدأ يبني انت وهو متصدعناش.. اجهزوا!");
+                zizoSay("متبدأ يبني انت وهو.. زيزو مستني الجاهزين!");
             }
         }, 1000);
     }
