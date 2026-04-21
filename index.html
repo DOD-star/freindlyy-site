@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOHRA HUB | بوابة الأساطير 🕹️</title>
+    <style>
+        :root { --neon: #00f2ff; --pink: #ff00ff; --gold: #ffd700; --bg: #05070a; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: 0.3s ease; }
+        
+        body { 
+            margin: 0; background: var(--bg); color: white; height: 100vh; overflow: hidden;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000');
+            background-size: cover; background-position: center;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* أنميشن الهدية والعملات */
+        #gift-container {
+            position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.9);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            backdrop-filter: blur(15px);
+        }
+        .gift-box-anim {
+            width: 150px; cursor: pointer; filter: drop-shadow(0 0 30px var(--gold));
+            animation: bounce 2s infinite ease-in-out;
+        }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1) rotate(5deg); } }
+
+        .flying-coin {
+            position: fixed; font-size: 2rem; z-index: 2001; pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* السايد بروفايل */
+        #side-profile { 
+            position: fixed; top: 25px; left: 25px; z-index: 100; display: none; 
+            padding: 4px; border-radius: 50%; border: 2px solid var(--neon);
+            box-shadow: 0 0 15px var(--neon); cursor: pointer;
+        }
+        .pfp-trigger { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; display: block; }
+        
+        .sidebar { 
+            position: fixed; top: 0; left: -350px; width: 320px; height: 100%; 
+            background: rgba(10, 10, 20, 0.98); border-right: 2px solid var(--neon); 
+            padding: 50px 25px; z-index: 500; backdrop-filter: blur(20px);
+            box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        }
+        .sidebar.open { left: 0; }
+
+        .glass-card {
+            background: rgba(20, 20, 30, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
+            padding: 35px; width: 90%; max-width: 420px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        #entry-page { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.7); }
+
+        #games-menu { display: none; flex-direction: column; gap: 20px; align-items: center; }
+        
+        .game-btn { 
+            width: 100%; padding: 22px; border-radius: 20px; font-size: 1.4rem; font-weight: 800;
+            text-decoration: none; color: white; display: block; text-align: center;
+            background: linear-gradient(90deg, rgba(255,0,255,0.1), rgba(0,242,255,0.1));
+            border: 1px solid var(--pink); box-shadow: 0 0 15px rgba(255,0,255,0.2);
+        }
+        .game-btn:hover { transform: translateY(-5px); background: rgba(255,0,255,0.2); box-shadow: 0 10px 30px rgba(255,0,255,0.4); }
+
+        /* تعديل شكل البروفايل */
+        .pfp-container { 
+            width: 120px; height: 120px; margin: 0 auto 20px; position: relative;
+            border: 3px solid var(--neon); border-radius: 50%; padding: 5px;
+        }
+        .pfp-preview { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; }
+        .crown-img { 
+            position: absolute; top: -40px; left: 50%; transform: translateX(-50%); 
+            width: 70px; filter: drop-shadow(0 0 10px var(--gold)); display: none;
+        }
+
+        input, select { 
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+            padding: 15px; color: white; border-radius: 15px; margin-top: 15px; font-size: 1rem;
+        }
+        input:focus { border-color: var(--neon); outline: none; }
+
+        .btn-action { 
+            width: 100%; padding: 18px; margin-top: 25px; border-radius: 15px; border: none;
+            font-weight: bold; font-size: 1.1rem; cursor: pointer;
+            background: var(--neon); color: #000; box-shadow: 0 0 20px rgba(0,242,255,0.3);
+        }
+
+        .balance-tag {
+            background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold);
+            padding: 15px; border-radius: 20px; margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="gift-container">
+        <h2 id="gift-text" style="color: var(--gold); font-size: 2rem;">هديتك وصلت! 🎁</h2>
+        <img src="https://cdn-icons-png.flaticon.com/512/2143/2143150.png" class="gift-box-anim" id="gift-img" onclick="collectGiftAnim()">
+        <p style="color: #aaa; margin-top: 20px;">افتح الصندوق يا بطل</p>
+    </div>
+
+    <div id="side-profile" onclick="toggleSidebar()">
+        <img id="mini-pfp" class="pfp-trigger" src="">
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <h2 style="color: var(--neon); text-align: center; letter-spacing: 2px;">MY PROFILE</h2>
+        <div style="text-align: center; margin-top: 30px;">
+            <img id="sidebar-pfp" src="" style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--pink); object-fit: cover;">
+            <h3 id="sidebar-name" style="margin: 15px 0; font-size: 1.5rem;"></h3>
+            
+            <div class="balance-tag">
+                <span style="color: #888; font-size: 0.8rem; display: block;">الرصيد الملكي</span>
+                <span style="font-size: 2rem; font-weight: 900; color: var(--gold);">🪙 <span id="sidebar-coins">0</span></span>
+            </div>
+
+            <button class="btn-action" style="background: var(--pink); color: white;" onclick="openEditMode()">تعديل البيانات</button>
+            <button onclick="toggleSidebar()" style="background:none; border:none; color:#555; margin-top:20px; cursor:pointer;">إغلاق الحاوية</button>
+        </div>
+    </div>
+
+    <div id="entry-page">
+        <div class="glass-card">
+            <h1 style="color: var(--neon); margin: 0 0 30px; font-style: italic; letter-spacing: 5px;">SOHRA</h1>
+            <div class="pfp-container">
+                <img id="crown-preview" class="crown-img" src="">
+                <img id="pfp-preview" class="pfp-preview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky">
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <label class="btn-action" style="background:#222; color:#fff; font-size:0.8rem; margin:0; padding:10px; width: auto; flex:1; text-align: center;">
+                    الجاليري 🖼️ <input type="file" hidden onchange="handleGallery(this)">
+                </label>
+                <button class="btn-action" style="background:#222; color:#fff; font-size:0.8rem; margin:0; padding:10px; width: auto; flex:1;" onclick="randomAvatar()">عشوائي 🤖</button>
+            </div>
+            <input type="text" id="userName" placeholder="اسمك في السهرة">
+            <div style="display: flex; gap: 10px;">
+                <select id="userGender" onchange="updateView()">
+                    <option value="male">ولد 👑</option>
+                    <option value="female">بنت 👸</option>
+                </select>
+                <select id="userFrame" onchange="updateView()">
+                    <option value="none">بدون تاج</option>
+                    <option value="crown">تاج ملكي</option>
+                </select>
+            </div>
+            <button class="btn-action" onclick="finishSetup()">دخول السهرة 🚀</button>
+        </div>
+    </div>
+
+    <div id="games-menu" class="glass-card">
+        <h2 style="color: var(--neon); margin-bottom: 30px;">اختر وجهتك</h2>
+        <a href="sohra-stories.html" class="game-btn">🌙 حكايات السهرة</a>
+        <a href="auction.html" class="game-btn" style="border-color: var(--gold); color: var(--gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);">💰 دخول المزاد</a>
+    </div>
+
+    <script>
+        let user = {
+            name: localStorage.getItem('user_name') || "",
+            photo: localStorage.getItem('user_photo') || "https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky",
+            gender: localStorage.getItem('user_gender') || "male",
+            frame: localStorage.getItem('user_frame') || "none",
+            coins: parseInt(localStorage.getItem('user_coins')) || 0,
+            gifted: localStorage.getItem('gift_done') === 'true'
+        };
+
+        window.onload = () => { if(user.name) showHome(); };
+
+        function updateView() {
+            const gender = document.getElementById('userGender').value;
+            const frame = document.getElementById('userFrame').value;
+            const crown = document.getElementById('crown-preview');
+            if(frame === 'crown') {
+                crown.src = (gender === 'female') ? "https://cdn-icons-png.flaticon.com/512/3554/3554031.png" : "https://cdn-icons-png.flaticon.com/512/2353/2353351.png";
+                crown.style.display = 'block';
+            } else { crown.style.display = 'none'; }
+        }
+
+        function handleGallery(input) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                user.photo = e.target.result;
+                document.getElementById('pfp-preview').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function randomAvatar() {
+            user.photo = `https://api.dicebear.com/7.x/avataaars/svg?seed=${Math.random()}`;
+            document.getElementById('pfp-preview').src = user.photo;
+        }
+
+        function finishSetup() {
+            const name = document.getElementById('userName').value;
+            if(!name) return alert("الاسم يا أسطورة!");
+            user.name = name;
+            user.gender = document.getElementById('userGender').value;
+            user.frame = document.getElementById('userFrame').value;
+            
+            localStorage.setItem('user_name', name);
+            localStorage.setItem('user_photo', user.photo);
+            localStorage.setItem('user_gender', user.gender);
+            localStorage.setItem('user_frame', user.frame);
+            showHome();
+        }
+
+        function showHome() {
+            document.getElementById('entry-page').style.display = 'none';
+            document.getElementById('games-menu').style.display = 'flex';
+            document.getElementById('side-profile').style.display = 'block';
+            updateProfileUI();
+            if(!user.gifted) document.getElementById('gift-container').style.display = 'flex';
+        }
+
+        function collectGiftAnim() {
+            const giftImg = document.getElementById('gift-img');
+            document.getElementById('gift-text').innerText = "مبرووك! +500 🪙";
+            
+            for(let i=0; i<12; i++) {
+                setTimeout(() => {
+                    const coin = document.createElement('div');
+                    coin.innerHTML = "🪙";
+                    coin.className = "flying-coin";
+                    coin.style.left = "50%"; coin.style.top = "50%";
+                    document.body.appendChild(coin);
+                    setTimeout(() => {
+                        coin.style.left = "40px"; coin.style.top = "40px";
+                        coin.style.opacity = "0";
+                    }, 50);
+                    setTimeout(() => coin.remove(), 800);
+                }, i * 80);
+            }
+
+            setTimeout(() => {
+                user.coins = 500;
+                user.gifted = true;
+                localStorage.setItem('user_coins', 500);
+                localStorage.setItem('gift_done', 'true');
+                updateProfileUI();
+                document.getElementById('gift-container').style.opacity = '0';
+                setTimeout(() => document.getElementById('gift-container').style.display = 'none', 500);
+            }, 1500);
+        }
+
+        function updateProfileUI() {
+            document.getElementById('mini-pfp').src = user.photo;
+            document.getElementById('sidebar-pfp').src = user.photo;
+            document.getElementById('sidebar-name').innerText = user.name;
+            document.getElementById('sidebar-coins').innerText = user.coins;
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function openEditMode() { 
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('entry-page').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

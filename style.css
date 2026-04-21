@@ -1,0 +1,30 @@
+/* تأثيرات الأنيميشن */
+@keyframes pulse-neon {
+    0% { box-shadow: 0 0 5px #A855F7; }
+    50% { box-shadow: 0 0 20px #A855F7; }
+    100% { box-shadow: 0 0 5px #A855F7; }
+}
+
+button:hover {
+    transform: translateY(-2px);
+    transition: all 0.2s ease-in-out;
+}
+
+input:focus {
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
+
+/* تخلي شكل السكرول بار لايق على الدارك مود */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #0B0E14;
+}
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #A855F7;
+}

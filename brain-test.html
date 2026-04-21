@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي الذكاء | اختيار الفرق ⚔️</title>
+    <style>
+        :root { --neon-green: #2ecc71; --neon-blue: #00f2ff; --neon-red: #e74c3c; --glass: rgba(255, 255, 255, 0.05); }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+        body { margin: 0; background: #0b0e14; color: white; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        #stars { position: absolute; inset: 0; z-index: 0; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--d) infinite; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        .screen { display: none; position: relative; z-index: 10; width: 95%; max-width: 600px; text-align: center; height: 90vh; }
+        .active { display: flex; flex-direction: column; animation: fadeIn 0.4s ease; }
+
+        .card { background: var(--glass); backdrop-filter: blur(20px); padding: 25px; border-radius: 35px; border: 2px solid var(--neon-blue); flex-grow: 1; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+
+        /* اختيار الفريق */
+        .teams-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .team-choice { 
+            background: rgba(255,255,255,0.03); border: 2px solid #333; border-radius: 20px; padding: 20px; 
+            cursor: pointer; position: relative;
+        }
+        .team-choice:hover { transform: translateY(-5px); border-color: white; }
+        .team-choice.selected-a { border-color: var(--neon-blue); background: rgba(0, 242, 255, 0.1); }
+        .team-choice.selected-b { border-color: var(--neon-red); background: rgba(231, 76, 60, 0.1); }
+
+        .player-tag { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 10px; margin: 5px 0; font-size: 0.8rem; }
+
+        /* الشات واللعب */
+        .chat-area { flex-grow: 1; background: rgba(0,0,0,0.3); border-radius: 15px; margin: 15px 0; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 0.85rem; text-align: right; }
+        .msg.me { background: var(--neon-blue); color: black; align-self: flex-start; }
+        .msg.partner { background: #333; color: white; align-self: flex-end; }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        input { background: #000; border: 1px solid #444; color: white; padding: 12px; border-radius: 12px; width: 100%; outline: none; }
+        input:focus { border-color: var(--neon-blue); }
+
+        .btn-action { background: var(--neon-green); color: black; padding: 15px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn-action:disabled { background: #555; cursor: not-allowed; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="stars"></div>
+
+    <div id="entry-screen" class="screen active">
+        <div class="card" style="justify-content: center;">
+            <h1 style="color:var(--neon-blue)">دخول الغرفة 🔑</h1>
+            <p>ادخل الكود السري للانضمام لأصحابك</p>
+            <div class="input-group">
+                <input type="text" id="userName" placeholder="اسمك المستعار">
+            </div>
+            <div class="input-group">
+                <input type="number" id="roomCode" placeholder="كود الغرفة (4 أرقام)">
+            </div>
+            <button class="btn-action" onclick="joinRoom()">انضمام الآن</button>
+        </div>
+    </div>
+
+    <div id="lobby-screen" class="screen">
+        <div class="card">
+            <h2 id="roomTitle">غرفة رقم #----</h2>
+            <p>اختر فريقك المفضل 👇</p>
+            
+            <div class="teams-container">
+                <div id="choiceA" class="team-choice" onclick="selectTeam('A')">
+                    <h3 style="color:var(--neon-blue); margin:0;">تيم الصقور</h3>
+                    <div id="listA">
+                        </div>
+                </div>
+                <div id="choiceB" class="team-choice" onclick="selectTeam('B')">
+                    <h3 style="color:var(--neon-red); margin:0;">تيم الذئاب</h3>
+                    <div id="listB">
+                        </div>
+                </div>
+            </div>
+
+            <button id="readyBtn" class="btn-action" onclick="setReady()">أنا جاهز (Ready) ✅</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="teamBadge" style="padding:5px 10px; border-radius:10px; font-size:0.7rem; font-weight:bold;">---</span>
+                <span style="color:var(--neon-green); font-size:0.8rem;">النقاط: <b id="score">0</b></span>
+            </div>
+
+            <div style="margin:20px 0;">
+                <h3 id="questionBox">جاري انتظار السؤال...</h3>
+                <div id="optionsBox" style="display:grid; gap:10px;"></div>
+            </div>
+
+            <div class="chat-area" id="chatBox">
+                <div class="msg partner">زميلك: يا وحش الإجابة إيه؟</div>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="chatMsg" placeholder="شات سري مع فريقك فقط...">
+                <button onclick="sendMsg()" style="background:var(--neon-blue); border:none; padding:10px 15px; border-radius:12px; cursor:pointer;">↑</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myName = "";
+        let myTeam = "";
+        let roomCode = "";
+
+        function joinRoom() {
+            myName = document.getElementById('userName').value;
+            roomCode = document.getElementById('roomCode').value;
+            
+            if(!myName || !roomCode) return alert("كمل البيانات يا بطل!");
+            
+            document.getElementById('roomTitle').innerText = "غرفة رقم #" + roomCode;
+            goTo('lobby-screen');
+        }
+
+        function selectTeam(team) {
+            myTeam = team;
+            document.getElementById('choiceA').className = 'team-choice' + (team === 'A' ? ' selected-a' : '');
+            document.getElementById('choiceB').className = 'team-choice' + (team === 'B' ? ' selected-b' : '');
+            
+            // تحديث القائمة (محاكاة)
+            const list = team === 'A' ? 'listA' : 'listB';
+            const otherList = team === 'A' ? 'listB' : 'listA';
+            document.getElementById(list).innerHTML = `<div class="player-tag">👤 ${myName}</div>`;
+            document.getElementById(otherList).innerHTML = "";
+        }
+
+        function setReady() {
+            if(!myTeam) return alert("اختار تيم الأول!");
+            
+            document.getElementById('readyBtn').innerText = "في انتظار الباقي... ⏳";
+            document.getElementById('readyBtn').disabled = true;
+
+            // محاكاة: اللعبة تبدأ بعد 2 ثانية
+            setTimeout(() => {
+                const badge = document.getElementById('teamBadge');
+                badge.innerText = myTeam === 'A' ? "تيم الصقور 🦅" : "تيم الذئاب 🐺";
+                badge.style.background = myTeam === 'A' ? "var(--neon-blue)" : "var(--neon-red)";
+                badge.style.color = "black";
+                
+                goTo('game-screen');
+                loadQuestion();
+            }, 2000);
+        }
+
+        function loadQuestion() {
+            const q = { txt: "ما هو الشيء الذي كلما زاد نقص؟", opts: ["العمر", "المال", "العلم"], correct: 0 };
+            document.getElementById('questionBox').innerText = q.txt;
+            const box = document.getElementById('optionsBox');
+            box.innerHTML = "";
+            q.opts.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-action";
+                btn.style.background = "rgba(255,255,255,0.05)";
+                btn.style.color = "white";
+                btn.style.border = "1px solid #444";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    if(i === q.correct) {
+                        btn.style.background = "var(--neon-green)";
+                        btn.style.color = "black";
+                        document.getElementById('score').innerText = "10";
+                    } else {
+                        btn.style.background = "var(--neon-red)";
+                    }
+                };
+                box.appendChild(btn);
+            });
+        }
+
+        function sendMsg() {
+            const inp = document.getElementById('chatMsg');
+            if(!inp.value) return;
+            const box = document.getElementById('chatBox');
+            box.innerHTML += `<div class="msg me">${inp.value}</div>`;
+            inp.value = "";
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function goTo(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // نجوم الخلفية
+        const stars = document.getElementById('stars');
+        for(let i=0; i<80; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.width = s.style.height = Math.random()*2+'px';
+            s.style.top = Math.random()*100+'vh'; s.style.left = Math.random()*100+'vw';
+            s.style.setProperty('--d', (Math.random()*3+2)+'s');
+            stars.appendChild(s);
+        }
+    </script>
+</body>
+</html>
