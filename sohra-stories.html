@@ -3,306 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOHRA COUNCIL | مجلس زيزو الشقي 🕶️</title>
-    
+    <title>SOHRA COUNCIL | مجلس زيزو 🕶️</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        :root {
-            --neon: #00f2ff;
-            --pink: #ff00ff;
-            --gold: #ffd700;
-            --dark: #05070a;
-            --ready-color: #2ecc71;
-        }
+        :root { --neon: #00f2ff; --pink: #ff00ff; --gold: #ffd700; --dark: #080a0f; --ready: #2ecc71; --card-bg: #12151d; }
+        * { box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--dark); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma; margin: 0; padding: 0; }
+        /* Header */
+        .top-bar { padding: 15px 30px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .logo { color: var(--pink); font-weight: 900; letter-spacing: 1px; font-size: 1.1rem; }
+        .me-pill { display: flex; align-items: center; gap: 10px; background: #1a1e26; padding: 6px 15px; border-radius: 30px; border: 1px solid #333; }
+        .me-pill img { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--neon); }
+
+        /* Main Layout */
+        .game-layout { flex: 1; display: grid; grid-template-columns: 350px 1fr; overflow: hidden; }
+
+        /* Players Side */
+        .players-side { padding: 30px; display: flex; flex-direction: column; align-items: center; border-right: 1px solid #1a1a1a; }
+        .chairs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 20px; width: 100%; max-width: 600px; }
         
-        body { background: var(--dark); height: 100vh; overflow: hidden; color: white; display: flex; flex-direction: column; }
+        .p-card { background: var(--card-bg); padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #222; transition: 0.3s; position: relative; }
+        .p-avatar { width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px; border: 2px solid #333; overflow: hidden; transition: 0.3s; }
+        .p-name { font-size: 0.85rem; color: #888; font-weight: 500; }
 
-        /* Header Design */
-        .header { 
-            padding: 15px 25px; 
-            background: rgba(10, 10, 20, 0.95); 
-            border-bottom: 2px solid var(--neon); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
-        }
+        /* Ready & Active States */
+        .p-card.is-ready { border-color: var(--ready); background: rgba(46, 204, 113, 0.05); }
+        .p-card.is-ready .p-avatar { border-color: var(--ready); box-shadow: 0 0 15px var(--ready); }
+        .p-card.is-ready .p-name { color: var(--ready); }
 
-        .user-pill { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 50px; border: 1px solid #333; }
-
-        /* Council Area */
-        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        .p-card.active { border-color: var(--neon); box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); transform: translateY(-5px); }
+        .p-card.active .p-avatar { border-color: var(--neon); box-shadow: 0 0 20px var(--neon); }
         
-        .chairs-grid { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; margin-bottom: 30px; width: 100%; }
-        
-        .player-card { width: 100px; text-align: center; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
-        
-        .p-avatar-wrap { 
-            width: 85px; height: 85px; border-radius: 50%; border: 3px solid #333; 
-            margin: 0 auto; background: #111; position: relative; transition: 0.3s;
-        }
+        .turn-timer { position: absolute; top: -10px; right: -10px; background: #ff3e3e; color: white; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: bold; }
 
-        /* Ready Status (Green Neon) */
-        .player-card.is-ready .p-avatar-wrap { 
-            border-color: var(--ready-color) !important; 
-            box-shadow: 0 0 20px var(--ready-color); 
-        }
-        .player-card.is-ready .p-name { color: var(--ready-color) !important; font-weight: bold; text-shadow: 0 0 5px var(--ready-color); }
+        /* Chat Side */
+        .chat-side { display: flex; flex-direction: column; background: #0b0d13; }
+        #chat-flow { flex: 1; overflow-y: auto; padding: 25px; }
+        .msg { margin-bottom: 12px; max-width: 85%; padding: 10px 15px; border-radius: 12px; font-size: 0.95rem; background: #181c25; border: 1px solid #252a35; }
+        .zi-msg { border-right: 4px solid var(--pink); color: #ffccff; background: rgba(255, 0, 255, 0.03); font-weight: bold; }
 
-        /* Active Turn Status (Blue Neon) */
-        .player-card.active .p-avatar-wrap { 
-            border-color: var(--neon); 
-            box-shadow: 0 0 30px var(--neon); 
-            transform: scale(1.15); 
-        }
+        /* Game Word Box */
+        .word-banner { margin-top: auto; padding: 20px; text-align: center; background: rgba(255, 215, 0, 0.05); border-top: 1px solid rgba(255, 215, 0, 0.2); }
+        .word-txt { color: var(--gold); font-size: 2rem; font-weight: 900; text-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
 
-        .p-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .p-name { font-size: 0.8rem; margin-top: 10px; color: #aaa; }
-        
-        .timer-tag { 
-            position: absolute; top: -35px; left: 50%; transform: translateX(-50%); 
-            background: #ff3333; color: white; padding: 3px 12px; border-radius: 12px; 
-            font-size: 12px; font-weight: bold; box-shadow: 0 0 10px rgba(255,0,0,0.5);
-        }
+        /* Controls */
+        .bottom-controls { padding: 20px 30px; background: #05070a; border-top: 1px solid #1a1a1a; display: flex; gap: 15px; align-items: center; }
+        .input-box { flex: 1; background: #12151d; border-radius: 12px; border: 1px solid #222; display: flex; align-items: center; padding: 5px 15px; }
+        .input-box input { flex: 1; background: none; border: none; color: white; padding: 10px; outline: none; }
+        .input-box input:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* Chat Sidebar Style */
-        .chat-section { 
-            height: 300px; background: rgba(0,0,0,0.8); 
-            border-top: 1px solid #222; display: flex; flex-direction: column; 
-        }
-        #messages-flow { flex: 1; overflow-y: auto; padding: 15px; scroll-behavior: smooth; }
-        
-        .msg-bubble { 
-            margin-bottom: 10px; padding: 10px 15px; border-radius: 12px; 
-            background: rgba(255,255,255,0.05); font-size: 0.9rem; max-width: 90%;
-            border-right: 3px solid transparent;
-        }
-        .zi-style { border-right-color: var(--pink); background: rgba(255, 0, 255, 0.05); color: #ffccff; font-weight: bold; }
+        .btn { padding: 12px 25px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-rdy { background: #1a1e26; color: white; border: 1px solid #333; }
+        .btn-rdy.active { background: var(--ready); color: black; box-shadow: 0 0 15px var(--ready); }
+        .btn-send { background: var(--neon); color: black; padding: 12px 20px; }
 
-        /* Control Bar */
-        .input-controls { padding: 15px; display: flex; gap: 10px; background: #000; border-top: 1px solid #222; }
-        
-        input { 
-            flex: 1; background: #111; border: 1px solid #333; color: white; 
-            padding: 12px 20px; border-radius: 12px; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--neon); }
-
-        .btn { padding: 0 25px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-ready { background: #222; color: white; border: 1px solid #444; }
-        .btn-ready.active { background: var(--ready-color); color: black; box-shadow: 0 0 15px var(--ready-color); }
-        .btn-send { background: var(--neon); color: black; font-size: 1.2rem; }
-
-        /* Overlay Styles */
-        #game-overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.96); 
-            display: none; flex-direction: column; align-items: center; 
-            justify-content: center; z-index: 1000; backdrop-filter: blur(10px);
-        }
-        #game-overlay.active { display: flex; }
-        
-        .winner-anim { text-align: center; animation: winnerPop 0.5s ease-out; }
-        @keyframes winnerPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .star-rating { 
-            display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; justify-content: center;
-        }
-        .vote-btn { 
-            width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); 
-            background: none; color: var(--gold); font-weight: bold; cursor: pointer;
-        }
-        .vote-btn:hover { background: var(--gold); color: black; }
+        /* Overlay */
+        #ov { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(8px); }
+        #ov.show { display: flex; }
+        .winner-h { font-size: 4rem; color: var(--neon); text-shadow: 0 0 30px var(--neon); margin-bottom: 10px; }
+        .star-box { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+        .star-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); color: var(--gold); background: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="game-overlay">
-    <div id="winner-view" style="display:none;" class="winner-anim">
-        <h1 id="champion-name" style="font-size: 4rem; color: var(--neon); text-shadow: 0 0 30px var(--neon);"></h1>
-        <h2 style="color: var(--gold); letter-spacing: 5px; margin-top: 10px;">👑 حكواتي السهرة 👑</h2>
-        <p id="timer-next" style="margin-top: 30px; font-size: 1.2rem; color: #888;"></p>
+<div id="ov">
+    <div id="win-ui" style="display:none; text-align:center;">
+        <h1 class="winner-h" id="winner-name"></h1>
+        <h2 style="color:var(--gold); letter-spacing:3px;">👑 حكواتي السهرة 👑</h2>
+    </div>
+    <div id="vote-ui" style="text-align:center;">
+        <h2 id="vote-prompt" style="color:var(--gold); margin-bottom:20px;"></h2>
+        <div class="star-box" id="stars-grid"></div>
+    </div>
+    <div id="cooldown" style="margin-top:30px; color:#555; font-weight:bold;"></div>
+</div>
+
+<div class="top-bar">
+    <div class="me-pill">
+        <img id="my-pfp" src="">
+        <span id="my-name"></span>
+    </div>
+    <div class="logo">SOHRA COUNCIL 🕶️</div>
+</div>
+
+<div class="game-layout">
+    <div class="players-side">
+        <div class="chairs-grid" id="chairs"></div>
     </div>
 
-    <div id="voting-view" style="text-align: center;">
-        <h2 id="vote-title" style="color: var(--gold); font-size: 2rem;">قيم حكاية الأسطورة ⭐</h2>
-        <div class="star-rating" id="stars-grid"></div>
+    <div class="chat-side">
+        <div id="chat-flow"></div>
+        <div id="word-banner" class="word-banner" style="display:none;">
+            <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">زيزو بيقولك كمل الجملة دي:</p>
+            <div class="word-txt" id="the-word"></div>
+        </div>
     </div>
 </div>
 
-<header class="header">
-    <div class="user-pill">
-        <img id="my-avatar" src="" style="width:35px; height:35px; border-radius:50%;">
-        <span id="my-display-name" style="font-weight:bold;"></span>
+<div class="bottom-controls">
+    <button class="btn btn-rdy" id="rdy-btn">READY</button>
+    <div class="input-box">
+        <input type="text" id="chat-in" placeholder="الشات مقفول بأمر من زيزو..." disabled>
     </div>
-    <div style="font-weight: 900; color: var(--pink); letter-spacing: 2px;">SOHRA COUNCIL 🕶️</div>
-</header>
-
-<div class="main-content">
-    <div class="chairs-grid" id="council-chairs"></div>
-    
-    <div id="word-display" style="display:none; padding: 20px 40px; border: 2px dashed var(--gold); border-radius: 20px; background: rgba(255,215,0,0.05);">
-        زيزو بيقولك الكلمة: <b id="target-word" style="font-size: 2.2rem; color: var(--gold);"></b>
-    </div>
-</div>
-
-<div class="chat-section">
-    <div id="messages-flow"></div>
-    <div class="input-controls">
-        <button class="btn btn-ready" id="ready-trigger">READY</button>
-        <input type="text" id="chat-in" placeholder="استنى زيزو يسمحلك بالكلام...">
-        <button class="btn btn-send" onclick="handleSend()">🚀</button>
-    </div>
+    <button class="btn btn-send" onclick="sendMsg()">🚀</button>
 </div>
 
 <script>
-    // --- 1. إعدادات فايربيز (حط بياناتك هنا) ---
-    const firebaseConfig = {
+    // --- تأكد من وضع بيانات Firebase الخاصة بك هنا ---
+    const config = {
         apiKey: "AIzaSy...", 
-        databaseURL: "https://your-project-id.firebaseio.com"
+        databaseURL: "https://your-project.firebaseio.com"
     };
-    firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(config);
     const db = firebase.database();
 
-    const playerName = localStorage.getItem('user_name') || "أسطورة_" + Math.floor(Math.random()*1000);
-    const playerImg = localStorage.getItem('user_photo') || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerName}`;
+    const user = {
+        name: localStorage.getItem('user_name') || "أسطورة",
+        photo: localStorage.getItem('user_photo') || "https://api.dicebear.com/7.x/avataaars/svg?seed=1"
+    };
 
-    const roomRef = db.ref('council_v3');
-    const playerRef = roomRef.child('players').child(playerName);
+    document.getElementById('my-name').innerText = user.name;
+    document.getElementById('my-pfp').src = user.photo;
 
-    document.getElementById('my-display-name').innerText = playerName;
-    document.getElementById('my-avatar').src = playerImg;
+    const room = db.ref('sohra_v4');
+    const me = room.child('players').child(user.name);
 
-    // الدخول للغرفة
-    playerRef.set({ name: playerName, photo: playerImg, ready: false, score: 0 });
-    playerRef.onDisconnect().remove();
+    me.set({ ...user, ready: false, score: 0 });
+    me.onDisconnect().remove();
 
-    // دالة زيزو العصبي
-    function zizoSay(text) {
-        roomRef.child('chat').push({ user: "زيزو الشقي 🕶️", msg: text, type: "zi" });
-    }
+    function zizo(txt) { room.child('chat').push({ u: "زيزو الشقي 🕶️", m: txt, t: "zi" }); }
 
-    // --- 2. مراقبة البيانات ---
-    roomRef.on('value', snap => {
+    // المراقبة الأساسية
+    room.on('value', snap => {
         const data = snap.val(); if(!data) return;
         
-        // تحديث كراسي اللاعبين
-        const grid = document.getElementById('council-chairs');
-        grid.innerHTML = '';
+        // تحديث الكراسي جنب بعض
+        const grid = document.getElementById('chairs'); grid.innerHTML = '';
         Object.keys(data.players || {}).forEach(p => {
-            const player = data.players[p];
-            const isTurn = (p === data.turn);
+            const ply = data.players[p];
             grid.innerHTML += `
-                <div class="player-card ${player.ready ? 'is-ready' : ''} ${isTurn ? 'active' : ''}">
-                    ${isTurn ? `<div class="timer-tag">${data.timeLeft}s</div>` : ''}
-                    <div class="p-avatar-wrap">
-                        <img src="${player.photo}" class="p-img">
-                    </div>
+                <div class="p-card ${ply.ready?'is-ready':''} ${p===data.turn?'active':''}">
+                    ${p===data.turn ? `<div class="turn-timer">${data.timeLeft}s</div>`:''}
+                    <div class="p-avatar"><img src="${ply.photo}" style="width:100%;height:100%;object-fit:cover;"></div>
                     <div class="p-name">${p}</div>
                 </div>`;
         });
 
-        // حالة اللعبة والأوفرلاي
-        const overlay = document.getElementById('game-overlay');
-        if (data.state === 'voting') {
-            overlay.classList.add('active');
-            document.getElementById('voting-view').style.display = 'block';
-            document.getElementById('winner-view').style.display = 'none';
-            setupStars(data.turn);
-        } else if (data.state === 'cooldown') {
-            overlay.classList.add('active');
-            document.getElementById('voting-view').style.display = 'none';
-            document.getElementById('winner-view').style.display = 'block';
-            showFinalWinner(data.players);
+        // قفل وفتح الشات (فقط لصاحب الدور)
+        const input = document.getElementById('chat-in');
+        if(data.turn === user.name && data.state === 'playing') {
+            input.disabled = false;
+            input.placeholder = "اكتب حكايتك هنا يا وحش...";
         } else {
-            overlay.classList.remove('active');
+            input.disabled = true;
+            input.placeholder = "الشات مقفول بأمر من زيزو...";
         }
 
-        document.getElementById('word-display').style.display = (data.state === 'playing') ? 'block' : 'none';
-        document.getElementById('target-word').innerText = data.word || "";
+        // الأوفرلاي
+        const ov = document.getElementById('ov');
+        if(data.state === 'voting') {
+            ov.classList.add('show');
+            document.getElementById('vote-ui').style.display='block';
+            document.getElementById('win-ui').style.display='none';
+            renderStars(data.turn);
+        } else if(data.state === 'cooldown') {
+            ov.classList.add('show');
+            document.getElementById('vote-ui').style.display='none';
+            document.getElementById('win-ui').style.display='block';
+            showWinner(data.players);
+        } else {
+            ov.classList.remove('show');
+        }
+
+        document.getElementById('word-banner').style.display = (data.state==='playing')?'block':'none';
+        document.getElementById('the-word').innerText = data.word || "";
     });
 
-    // --- 3. الأفعال (إرسال، جاهزية) ---
-    document.getElementById('ready-trigger').onclick = function() {
-        const isReady = this.classList.toggle('active');
-        playerRef.update({ ready: isReady });
-        if(isReady) zizoSay(`أيوه كده يا ${playerName} اجهز بدل ما أطردك بره!`);
+    document.getElementById('rdy-btn').onclick = function() {
+        const r = this.classList.toggle('active');
+        me.update({ ready: r });
+        if(r) zizo(`أيووه يا ${user.name} اجهز متبقاش نوتي!`);
     };
 
-    let countdown;
-    roomRef.child('turn').on('value', snap => {
-        clearInterval(countdown);
-        if(snap.val() === playerName) {
-            let time = 300;
-            countdown = setInterval(() => {
-                time--; roomRef.update({ timeLeft: time });
-                if(time === 60) zizoSay(`اخلص يا ${playerName} صدعتنا فاضل دقيقة!`);
-                if(time <= 0) { clearInterval(countdown); handleSend(); }
-            }, 1000);
-        }
-    });
-
-    function handleSend() {
-        const inp = document.getElementById('chat-in');
-        if(inp.value.trim().length < 5) {
-            zizoSay(`تؤتؤتؤ.. انت نوتي يا ${playerName}، اكتب حكاية عدلة بدل ما أكرشك!`);
-            return;
-        }
-        clearInterval(countdown);
-        roomRef.child('chat').push({ user: playerName, msg: inp.value });
-        roomRef.update({ state: 'voting', timeLeft: 300 });
-        inp.value = '';
+    function sendMsg() {
+        const i = document.getElementById('chat-in');
+        if(i.disabled) return;
+        if(i.value.length < 5) { zizo(`تؤتؤتؤ.. انت نوتي يا ${user.name} كمل الجملة عدل!`); return; }
+        room.child('chat').push({ u: user.name, m: i.value });
+        room.update({ state: 'voting', timeLeft: 300 });
+        i.value = '';
     }
 
-    function setupStars(target) {
+    function renderStars(target) {
         const grid = document.getElementById('stars-grid'); grid.innerHTML = '';
-        if(playerName !== target) {
-            document.getElementById('vote-title').innerText = `قيم حكاية الأسطورة ${target}`;
-            for(let i=1; i<=10; i++) {
-                grid.innerHTML += `<button class="vote-btn" onclick="submitVote('${target}', ${i})">${i}</button>`;
-            }
-        } else {
-            document.getElementById('vote-title').innerText = "المجلس بيقيم حكايتك.. استنى حكم زيزو!";
+        document.getElementById('vote-prompt').innerText = (user.name===target) ? "المجلس بيقيمك..." : "قيم حكاية " + target;
+        if(user.name !== target) {
+            for(let i=1; i<=10; i++) grid.innerHTML += `<button class="star-btn" onclick="vote('${target}',${i})">${i}</button>`;
         }
     }
 
-    window.submitVote = (target, stars) => {
-        db.ref(`council_v3/players/${target}/score`).transaction(v => (v||0) + stars);
-        roomRef.update({ state: 'cooldown' });
+    window.vote = (t,s) => {
+        db.ref(`sohra_v4/players/${t}/score`).transaction(v => (v||0)+s);
+        room.update({ state: 'cooldown' });
     };
 
-    function showFinalWinner(players) {
-        let winner = { name: "محدش", score: -1 };
-        Object.keys(players).forEach(p => { 
-            if(players[p].score > winner.score) winner = { name: p, score: players[p].score }; 
-        });
-        document.getElementById('champion-name').innerText = winner.name;
-        
-        let sec = 10;
+    function showWinner(players) {
+        let top = {n:"لا أحد", s:-1};
+        Object.keys(players).forEach(p => { if(players[p].score > top.s) top={n:p, s:players[p].score}; });
+        document.getElementById('winner-name').innerText = top.n;
+        let c = 10;
         const iv = setInterval(() => {
-            sec--;
-            document.getElementById('timer-next').innerText = `الدور القادم هيبدأ كمان ${sec} ثواني...`;
-            if(sec <= 0) {
+            c--; document.getElementById('cooldown').innerText = "الجولة القادمة في " + c;
+            if(c<=0) {
                 clearInterval(iv);
-                roomRef.update({ state: 'waiting', turn: "", word: "بحر" });
-                playerRef.update({ ready: false, score: 0 });
-                document.getElementById('ready-trigger').classList.remove('active');
-                zizoSay("يلا متبدأ يبني انت وهو.. زيزو مستني الجاهزين!");
+                room.update({ state:'waiting', turn:'', word:'كان ياما كان..' });
+                me.update({ ready:false, score:0 });
+                document.getElementById('rdy-btn').classList.remove('active');
+                zizo("متبدأ يبني انت وهو متصدعناش.. اجهزوا!");
             }
         }, 1000);
     }
 
-    // شات زيزو والناس
-    roomRef.child('chat').limitToLast(25).on('child_added', snap => {
+    room.child('chat').limitToLast(20).on('child_added', snap => {
         const d = snap.val();
-        const flow = document.getElementById('messages-flow');
-        flow.innerHTML += `<div class="msg-bubble ${d.type==='zi' ? 'zi-style' : ''}"><b>${d.user}:</b> ${d.msg}</div>`;
+        const flow = document.getElementById('chat-flow');
+        flow.innerHTML += `<div class="msg ${d.t==='zi'?'zi-msg':''}"><b>${d.u}:</b> ${d.m}</div>`;
         flow.scrollTop = flow.scrollHeight;
     });
 </script>
-
 </body>
 </html>
