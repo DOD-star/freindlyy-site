@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BATTLEFIELD | THE WAR ⚔️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --war-red: #bc0000; --gold: #ffd700; --dark: #050505; }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Orbitron', sans-serif; background: var(--dark); color: white; overflow: hidden; }
+
+        /* --- شاشة التحميل --- */
+        #battle-loader {
+            position: fixed; inset: 0; z-index: 1000;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('battle_load.gif');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding-bottom: 100px;
+        }
+
+        .loading-container { width: 80%; max-width: 600px; text-align: center; }
+        
+        .arrow-loader {
+            font-size: 50px; color: var(--war-red);
+            animation: arrowPush 1s infinite;
+            text-shadow: 0 0 15px var(--war-red);
+            margin-bottom: 10px;
+        }
+        @keyframes arrowPush {
+            0% { transform: translateY(0); opacity: 0.3; }
+            50% { transform: translateY(-20px); opacity: 1; }
+            100% { transform: translateY(0); opacity: 0.3; }
+        }
+
+        .load-text { font-family: 'Black Ops One', cursive; font-size: 2.5rem; letter-spacing: 5px; color: #fff; margin-bottom: 15px; }
+        
+        .progress-bar { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,0,0,0.3); }
+        .progress-fill { width: 0%; height: 100%; background: var(--war-red); box-shadow: 0 0 20px var(--war-red); }
+
+        /* --- شاشة التسجيل المحدثة --- */
+        #register-screen {
+            display: none; height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('battle_hub.jpg');
+            background-size: cover; background-position: center;
+            justify-content: center; align-items: center;
+            opacity: 0; transition: 1s;
+        }
+
+        .reg-box {
+            background: rgba(10, 10, 10, 0.9); padding: 40px; border-radius: 20px;
+            border: 2px solid var(--war-red); box-shadow: 0 0 30px rgba(188, 0, 0, 0.4);
+            width: 90%; max-width: 400px; text-align: center; backdrop-filter: blur(10px);
+        }
+
+        .reg-box h2 { font-family: 'Black Ops One', cursive; color: var(--war-red); font-size: 2.5rem; margin-bottom: 5px; text-shadow: 2px 2px #000; }
+        
+        /* حاوية الإدخال لتحسين الشكل */
+        .input-group { position: relative; margin-bottom: 20px; text-align: right; }
+        .input-group label { display: block; color: var(--gold); font-size: 0.8rem; margin-bottom: 5px; margin-right: 5px; letter-spacing: 1px; }
+        
+        input {
+            width: 100%; padding: 15px; background: rgba(255,255,255,0.05);
+            border: 1px solid #333; color: white; border-radius: 8px; outline: none; 
+            text-align: center; font-family: 'Orbitron', sans-serif; transition: 0.3s;
+        }
+        
+        input:focus { border-color: var(--war-red); background: rgba(188, 0, 0, 0.1); }
+
+        .start-btn {
+            width: 100%; padding: 15px; background: var(--war-red); color: white;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            font-size: 1.1rem; text-transform: uppercase; transition: 0.3s;
+            font-family: 'Black Ops One', cursive; letter-spacing: 2px;
+        }
+        .start-btn:hover { background: #ff0000; box-shadow: 0 0 20px var(--war-red); transform: scale(1.02); }
+
+    </style>
+</head>
+<body>
+
+    <div id="battle-loader">
+        <div class="loading-container">
+            <div class="arrow-loader">▲</div>
+            <div class="load-text" id="status">LOADING...</div>
+            <div class="progress-bar"><div id="fill" class="progress-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="register-screen">
+        <div class="reg-box">
+            <h2>WARRIOR</h2>
+            <p style="color:var(--gold); margin-bottom: 30px;">ESTABLISH CONNECTION</p>
+            
+            <div class="input-group">
+                <label>CODENAME (الاسم القتالي)</label>
+                <input type="text" id="war-name" placeholder="E.G. GHOST_01">
+            </div>
+
+            <div class="input-group">
+                <label>ACCESS KEY (كلمة المرور)</label>
+                <input type="password" id="war-pass" placeholder="••••••••">
+            </div>
+
+            <button class="start-btn" onclick="enterBattle()">DEPLOY TO LOBBY</button>
+        </div>
+    </div>
+
+    <script>
+        // لودر التحميل
+        let width = 0;
+        let loader = setInterval(() => {
+            width += 1;
+            document.getElementById('fill').style.width = width + '%';
+            if (width >= 100) {
+                clearInterval(loader);
+                document.getElementById('status').innerText = "READY!";
+                setTimeout(showRegister, 500);
+            }
+        }, 40);
+
+        function showRegister() {
+            document.getElementById('battle-loader').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('battle-loader').style.display = 'none';
+                const reg = document.getElementById('register-screen');
+                reg.style.display = 'flex';
+                setTimeout(() => reg.style.opacity = '1', 50);
+            }, 800);
+        }
+
+        function enterBattle() {
+            const name = document.getElementById('war-name').value;
+            const pass = document.getElementById('war-pass').value;
+
+            if(!name || !pass) {
+                return alert("خطأ: يجب إدخال الاسم وكلمة المرور للالتحاق بالمعركة!");
+            }
+
+            // حفظ البيانات في المتصفح
+            localStorage.setItem('warrior_name', name);
+            // ملاحظة: في المشاريع الحقيقية لا يتم حفظ الباسورد هكذا، لكن هنا كفكرة "نظام حساب"
+            localStorage.setItem('warrior_status', 'authenticated');
+
+            // الانتقال لصفحة اللوبي
+            window.location.href = 'battle_lobby.html';
+        }
+    </script>
+</body>
+</html>

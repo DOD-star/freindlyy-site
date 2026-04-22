@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOHRA ULTIMATE | EYAD 👑</title>
+    <style>
+        :root { --pink: #ff00ff; --gold: #ffd700; --neon: #cc00ff; --bg: #050505; }
+        * { box-sizing: border-box; font-family: 'Orbitron', sans-serif; }
+        
+        body { 
+            margin: 0; background: var(--bg); color: white; height: 100vh; overflow: hidden;
+            background-size: cover; background-position: center;
+            transition: background-image 0.8s ease-in-out;
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: ''; position: fixed; inset: 0; 
+            background: radial-gradient(circle, transparent, rgba(0,0,0,0.9)); z-index: -1;
+        }
+
+        /* --- شاشة التحميل --- */
+        #loader-screen {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        #eyad-title {
+            font-size: 4rem; font-weight: 900; color: #fff;
+            text-shadow: 0 0 10px var(--pink), 0 0 30px var(--neon), 0 0 50px var(--pink);
+            position: absolute; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .loading-ui { position: absolute; bottom: 10%; width: 300px; text-align: center; }
+        .bar-bg { width: 100%; height: 8px; background: #1a1a1a; border-radius: 20px; margin-top: 15px; overflow: hidden; }
+        .bar-fill { width: 0%; height: 100%; background: linear-gradient(to right, var(--pink), var(--gold)); }
+
+        .zoom-effect { animation: superZoom 2.5s forwards ease-in-out; }
+        @keyframes superZoom { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(40); opacity: 0; } }
+
+        /* --- الصالة الرئيسية --- */
+        #main-content { display: none; opacity: 0; transition: 1.5s; height: 100vh; }
+        
+        header { 
+            padding: 20px 60px; display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+        .profile-btn { 
+            display: flex; align-items: center; gap: 15px; cursor: pointer; 
+            padding: 8px 25px; border-radius: 50px; border: 2px solid var(--pink);
+            background: rgba(255, 0, 255, 0.1); backdrop-filter: blur(10px);
+        }
+        .profile-btn img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #fff; }
+
+        .game-section { height: 80vh; display: flex; align-items: center; justify-content: center; position: relative; }
+        .carousel { display: flex; gap: 30px; overflow-x: auto; scroll-behavior: smooth; width: 95%; padding: 50px; scrollbar-width: none; }
+        .carousel::-webkit-scrollbar { display: none; }
+
+        .card { 
+            min-width: 340px; height: 500px; background: #000; border-radius: 30px; 
+            border: 1px solid rgba(255,255,255,0.1); overflow: hidden; cursor: pointer; position: relative;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; transition: 0.6s; }
+        
+        /* طبقة المعلومات المتطورة */
+        .card-info {
+            position: absolute; bottom: 0; width: 100%; padding: 30px 20px;
+            background: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0.5) 70%, transparent);
+            transform: translateY(60px); transition: 0.5s;
+        }
+
+        .meta-data { 
+            display: flex; gap: 15px; justify-content: center; margin-top: 10px;
+            font-size: 0.75rem; color: var(--gold); opacity: 0; transition: 0.5s;
+        }
+
+        .card-tag {
+            background: var(--pink); padding: 3px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: bold;
+        }
+
+        .card h3 { margin: 10px 0; color: #fff; font-size: 1.8rem; }
+        .card p { margin: 0; color: #aaa; font-size: 0.85rem; line-height: 1.5; height: 0; opacity: 0; transition: 0.5s; overflow: hidden; }
+
+        .card:hover { 
+            border-color: var(--pink); transform: scale(1.05);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .card:hover img { opacity: 0.7; transform: scale(1.1); }
+        .card:hover .card-info { transform: translateY(0); }
+        .card:hover p, .card:hover .meta-data { opacity: 1; height: auto; margin-top: 10px; }
+
+        .arrow { 
+            position: absolute; top: 50%; transform: translateY(-50%); width: 60px; height: 60px; 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            border-radius: 50%; cursor: pointer; z-index: 100; font-size: 25px; backdrop-filter: blur(10px);
+        }
+        .arrow:hover { background: var(--pink); border-color: var(--pink); }
+        .left { left: 15px; }
+        .right { right: 15px; }
+
+        .news-line { position: fixed; bottom: 0; width: 100%; background: #000; padding: 12px; border-top: 1px solid #222; }
+        .ticker-txt { white-space: nowrap; animation: run 25s linear infinite; color: var(--gold); font-size: 0.9rem; font-weight: bold; }
+        @keyframes run { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+    </style>
+</head>
+<body id="mainBody" style="background-image: url('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2000');">
+
+    <audio id="hoverSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
+
+    <div id="loader-screen">
+        <div id="eyad-title">EYAD</div>
+        <div class="loading-ui">
+            <div style="color: var(--pink); letter-spacing: 2px; font-size: 0.8rem;" id="load-status">INITIALIZING SYSTEM...</div>
+            <div class="bar-bg"><div id="bar-fill" class="bar-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <header>
+            <div class="profile-btn" onclick="window.location.href='register.html'">
+                <img id="user-pfp" src="">
+                <span id="user-name" style="font-weight: bold; color: #fff;">إياد</span>
+            </div>
+            <div style="color: var(--gold); font-size: 1.2rem; font-weight: 900;">SOHRA ELITE</div>
+        </header>
+
+        <main class="game-section">
+            <button class="arrow left" onclick="scrollTrack(-450)">></button>
+            <div class="carousel" id="carousel">
+                
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000')" onclick="openGame('battlefield.html')">
+                    <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">ACTION</span>
+                        <h3>ساحة المعركة</h3>
+                        <p>واجه الخصوم في قتالات مباشرة وكن الأخير صموداً في المملكة.</p>
+                        <div class="meta-data">
+                            <span>👥 2-10 Players</span>
+                            <span>⭐ 4.9/5</span>
+                            <span>💾 120MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000')" onclick="openGame('stories.html')">
+                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">STORY</span>
+                        <h3>مجلس الحكايات</h3>
+                        <p>رحلة سينمائية غامرة وسط أساطير وتاريخ ملوك السهرة.</p>
+                        <div class="meta-data">
+                            <span>👥 Single Player</span>
+                            <span>⭐ 4.7/5</span>
+                            <span>💾 85MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1511193311914-0346f16efe90?q=80&w=2000')" onclick="openGame('challenge.html')">
+                    <img src="https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">PUZZLE</span>
+                        <h3>تحدي الملوك</h3>
+                        <p>ألعاب استراتيجية تتطلب ذكاءً حاداً وسرعة بديهة مذهلة.</p>
+                        <div class="meta-data">
+                            <span>👥 1-4 Players</span>
+                            <span>⭐ 4.8/5</span>
+                            <span>💾 45MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2000')" onclick="openGame('market.html')">
+                    <img src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">TYCOON</span>
+                        <h3>سوق الذهب</h3>
+                        <p>قم ببناء إمبراطوريتك التجارية ونافس على لقب أغنى ملك.</p>
+                        <div class="meta-data">
+                            <span>👥 Multiplayer</span>
+                            <span>⭐ 4.5/5</span>
+                            <span>💾 30MB</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <button class="arrow right" onclick="scrollTrack(450)"><</button>
+        </main>
+
+        <div class="news-line"><div class="ticker-txt"> 👑 أهلاً بك يا إياد .. نظام السهرة المتكامل قيد التشغيل .. جميع التحديات متاحة الآن 👑 </div></div>
+    </div>
+
+    <script>
+        const title = document.getElementById('eyad-title');
+        let prog = 0;
+        let mover;
+
+        window.onload = () => {
+            if(sessionStorage.getItem('done_eyad')) {
+                document.getElementById('loader-screen').style.display = 'none';
+                enterApp();
+            } else {
+                startMover();
+                runLoader();
+            }
+        };
+
+        function startMover() {
+            mover = setInterval(() => {
+                if(prog < 100) {
+                    const x = Math.random() * (window.innerWidth - 200);
+                    const y = Math.random() * (window.innerHeight - 200);
+                    title.style.left = x + 'px';
+                    title.style.top = y + 'px';
+                }
+            }, 500);
+        }
+
+        function runLoader() {
+            const fill = document.getElementById('bar-fill');
+            const status = document.getElementById('load-status');
+            const intv = setInterval(() => {
+                prog++;
+                fill.style.width = prog + "%";
+                status.innerText = `SYNCING EYAD... ${prog}%`;
+                if(prog >= 100) {
+                    clearInterval(intv);
+                    clearInterval(mover);
+                    zoomSequence();
+                }
+            }, 50); 
+        }
+
+        function zoomSequence() {
+            title.style.left = '50%';
+            title.style.top = '50%';
+            title.style.transform = 'translate(-50%, -50%)';
+            setTimeout(() => {
+                document.querySelector('.loading-ui').style.opacity = '0';
+                title.classList.add('zoom-effect');
+                setTimeout(() => {
+                    document.getElementById('loader-screen').style.display = 'none';
+                    sessionStorage.setItem('done_eyad', 'true');
+                    enterApp();
+                }, 2200);
+            }, 1000);
+        }
+
+        function enterApp() {
+            const main = document.getElementById('main-content');
+            main.style.display = 'block';
+            setTimeout(() => main.style.opacity = '1', 100);
+            document.getElementById('user-pfp').src = localStorage.getItem('user_photo') || '';
+            document.getElementById('user-name').innerText = localStorage.getItem('user_name') || 'إياد';
+        }
+
+        function changeBg(imgUrl) {
+            document.getElementById('mainBody').style.backgroundImage = `url('${imgUrl}')`;
+            const hSound = document.getElementById('hoverSound');
+            hSound.currentTime = 0;
+            hSound.play().catch(()=>{});
+        }
+
+        function openGame(pageUrl) {
+            const cSound = document.getElementById('clickSound');
+            cSound.play().catch(()=>{});
+            setTimeout(() => {
+                window.location.href = pageUrl;
+            }, 200);
+        }
+
+        function scrollTrack(dist) {
+            document.getElementById('carousel').scrollBy({ left: dist, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

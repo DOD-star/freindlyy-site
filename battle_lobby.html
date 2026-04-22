@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHOST LOBBY 3D</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --war-red: #ff0000; --gold: #ffd700; --bg: #050505; }
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); overflow: hidden; font-family: 'Orbitron', sans-serif; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        /* واجهة المستخدم (UI) */
+        #ui-layer {
+            position: absolute; inset: 0; z-index: 10; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 30px;
+        }
+        .stat-box { 
+            background: rgba(255, 0, 0, 0.1); 
+            backdrop-filter: blur(15px); 
+            border-left: 5px solid var(--war-red); 
+            padding: 15px 30px; 
+            color: white; 
+            pointer-events: auto; 
+            width: fit-content;
+            box-shadow: 0 0 20px rgba(255,0,0,0.1);
+        }
+        .btn-deploy { 
+            background: var(--war-red); 
+            color: white; 
+            padding: 20px 80px; 
+            font-family: 'Black Ops One'; 
+            font-size: 2rem; 
+            border: none; 
+            cursor: pointer; 
+            clip-path: polygon(15% 0, 100% 0, 85% 100%, 0 100%); 
+            transition: 0.4s; 
+            pointer-events: auto; 
+            align-self: center; 
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .btn-deploy:hover { transform: scale(1.1); box-shadow: 0 0 60px var(--war-red); }
+        
+        #loading-screen { 
+            position: fixed; inset: 0; background: #000; z-index: 100; 
+            display: flex; justify-content: center; align-items: center; 
+            color: var(--war-red); font-family: 'Black Ops One'; font-size: 1.5rem; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">DEPLOYING GHOST...</div>
+
+    <div id="ui-layer">
+        <div class="stat-box">
+            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Operator</div>
+            <div id="p-name" style="color:var(--gold); font-size: 1.6rem;">GHOST</div>
+        </div>
+        <button class="btn-deploy">Start Mission</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        let scene, camera, renderer, mixer, clock, model;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+            scene.fog = new THREE.Fog(0x050505, 1, 8);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.4, 3.2); // قربنا الكاميرا عشان الشخصية تبان واضحة
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            document.body.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // إضاءة سينمائية احترافية
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2)); // نور عام
+            
+            const mainLight = new THREE.SpotLight(0xffffff, 150); // نور أبيض "توب"
+            mainLight.position.set(2, 5, 2);
+            mainLight.castShadow = true;
+            scene.add(mainLight);
+
+            const redLight = new THREE.PointLight(0xff0000, 80); // نور أحمر من الجنب بيدي جو حربي
+            redLight.position.set(-3, 2, 2);
+            scene.add(redLight);
+
+            // الأرضية (شبكة ليزر)
+            const grid = new THREE.GridHelper(20, 50, 0xff0000, 0x111111);
+            scene.add(grid);
+
+            // تحميل الموديل (الخطوة دي هي اللي فيها اللعبة كلها)
+            const loader = new GLTFLoader();
+            
+            // تأكد إن ملفك اسمه بالضبط hero.glb وموجود مع الملف ده في نفس الفولدر
+            loader.load('hero.glb', (gltf) => {
+                model = gltf.scene;
+                
+                // تظبيط الحجم أوتوماتيك مهما كان الموديل ضخم أو قزم
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3()).y;
+                const scale = 2 / size; 
+                model.scale.set(scale, scale, scale);
+                model.position.y = 0;
+
+                model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+                scene.add(model);
+
+                // تشغيل الأنيميشن فوراً (لو الملف فيه حركات)
+                if (gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(model);
+                    mixer.clipAction(gltf.animations[0]).play();
+                } else {
+                    console.log("⚠️ لا يوجد أنيميشن في الملف.");
+                }
+
+                document.getElementById('loading-screen').style.display = 'none';
+            }, undefined, (error) => {
+                // لو جوجل رفض، هيطلع إيرور هنا بالسبب
+                document.getElementById('loading-screen').innerHTML = "<span style='color:red'>خطأ: جوجل مش شايف ملف hero.glb! تأكد إنهم جنب بعض وشغل الـ Live Server.</span>";
+                console.error("❌ جوجل رفض الملف بسبب: ", error);
+            });
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            
+            // دوران خفيف تلقائي للكاميرا بيدي جو سينمائي
+            camera.position.x = Math.sin(Date.now() * 0.0005) * 0.1;
+            camera.lookAt(0, 1, 0);
+
+            // دوران خفيف للشخصية لو مش بتتحرك عشان متكونش صنم
+            if (model && !mixer) {
+                model.rotation.y += 0.002;
+            }
+            
+            if (mixer) mixer.update(delta);
+            renderer.render(scene, camera);
+        }
+
+        // جلب الاسم من localStorage (أو اسم افتراضي)
+        document.getElementById('p-name').innerText = localStorage.getItem('warrior_name') || "GHOST_SOLDIER";
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+    </script>
+</body>
+</html>
