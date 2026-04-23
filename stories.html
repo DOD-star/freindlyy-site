@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>حكايات السهرة | Welcome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Reem+Kufi:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #0a0a1a; overflow: hidden; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; }
+        
+        /* الخلفية المتحركة */
+        .bg { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a3a 0%, #050505 100%); z-index: -1; }
+
+        /* الكلمة اللي بتلف */
+        .welcome-text { font-family: 'Reem Kufi', sans-serif; font-size: 50px; color: #ff8c00; text-shadow: 0 0 20px rgba(255,140,0,0.6); animation: rotateText 4s linear infinite; margin-bottom: 50px; }
+        @keyframes rotateText { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+
+        /* شريط التحميل */
+        .loading-container { width: 300px; height: 10px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid #ff8c00; }
+        .loading-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #ff8c00, #ffd700); transition: 0.1s; }
+        .loading-status { margin-top: 10px; font-size: 14px; color: #aaa; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    <div class="welcome-text">مرحبااا بكم</div>
+    
+    <div class="loading-container">
+        <div class="loading-bar" id="bar"></div>
+    </div>
+    <div class="loading-status">جارٍ تحضير السهرة... <span id="percent">0%</span></div>
+
+    <script>
+        let p = 0;
+        let bar = document.getElementById('bar');
+        let percent = document.getElementById('percent');
+        
+        let interval = setInterval(() => {
+            p += Math.floor(Math.random() * 5) + 1;
+            if(p > 100) p = 100;
+            bar.style.width = p + "%";
+            percent.innerText = p + "%";
+            if(p >= 100) {
+                clearInterval(interval);
+                setTimeout(() => window.location.href = 'profile.html', 500);
+            }
+        }, 100);
+    </script>
+</body>
+</html>

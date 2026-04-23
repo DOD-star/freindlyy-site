@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>SOHRA ELITE | FIXED CONTROLS</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #87ceeb; }
+        #timer { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #ff8c00; font-size: 50px; font-weight: bold; z-index: 10; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+
+<div id="timer">20</div>
+
+<script type="module">
+    import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
+    import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    document.body.appendChild(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
+
+    let hero, map, mixer, idleAction, walkAction;
+    let pitch = 0; 
+    const keys = {};
+
+    const loader = new GLTFLoader();
+
+    // تحميل الخريطة
+    loader.load('./map.glb', (gltf) => {
+        map = gltf.scene;
+        scene.add(map);
+    });
+
+    // تحميل هيرو
+    const currentSkin = localStorage.getItem('currentSkin') || 'hero'; 
+    loader.load(`./${currentSkin}.glb`, (gltf) => {
+        hero = gltf.scene;
+        hero.scale.set(0.0035, 0.0035, 0.0035);
+        
+        // رفع اللاعب فوق الأرض بـ 2 متر عشان ميرسبنش تحتها
+        hero.position.set(0, 2, 0); 
+        scene.add(hero);
+
+        mixer = new THREE.AnimationMixer(hero);
+        if (gltf.animations.length > 0) {
+            idleAction = mixer.clipAction(gltf.animations[0]);
+            if (gltf.animations[1]) walkAction = mixer.clipAction(gltf.animations[1]);
+            idleAction.play();
+        }
+    });
+
+    document.body.onclick = () => document.body.requestPointerLock();
+
+    window.addEventListener('mousemove', (e) => {
+        if (document.pointerLockElement && hero) {
+            // يمين وشمال عكسي (شمال يلف يمين)
+            hero.rotation.y += e.movementX * 0.003; 
+
+            // فوق وتحت عكسي (تحت يبص فوق)
+            pitch += e.movementY * 0.003; 
+            pitch = Math.max(-0.6, Math.min(0.6, pitch));
+        }
+    });
+
+    window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+    window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+    const clock = new THREE.Clock();
+    function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+
+        if (hero) {
+            // قللنا السرعة لـ 0.08 عشان ميبقاش سريع أوي
+            const moveSpeed = 0.08; 
+            const isMoving = keys['w'] || keys['s'] || keys['a'] || keys['d'];
+
+            // تصحيح الاتجاهات بناءً على طلبك (عكسنا الإشارات عشان تظبط مع موديل هيرو)
+            if (keys['w']) hero.translateZ(-moveSpeed); // كان بيطلع ورا، فخليناه سالب عشان يطلع قدام
+            if (keys['s']) hero.translateZ(moveSpeed);
+            if (keys['a']) hero.translateX(-moveSpeed);
+            if (keys['d']) hero.translateX(moveSpeed);
+
+            // تظبيط الأنيميشن
+            if (mixer) {
+                if (isMoving && walkAction) {
+                    if (!walkAction.isRunning()) { idleAction.stop(); walkAction.play(); }
+                } else if (!isMoving && idleAction) {
+                    if (!idleAction.isRunning()) { if(walkAction) walkAction.stop(); idleAction.play(); }
+                }
+            }
+
+            // كاميرا ثيرد بيرسون ثابتة خلفه
+            const relativeCameraOffset = new THREE.Vector3(0, 4, 8); // رفعنا الكاميرا شوية كمان
+            const cameraOffset = relativeCameraOffset.applyMatrix4(hero.matrixWorld);
+            
+            camera.position.lerp(cameraOffset, 0.1);
+
+            // نقطة الهدف للكاميرا مع تأثير الـ Pitch
+            const lookTarget = new THREE.Vector3(0, 1.5 + pitch * 10, -5); 
+            const finalTarget = lookTarget.applyMatrix4(hero.matrixWorld);
+            camera.lookAt(finalTarget);
+        }
+
+        if (mixer) mixer.update(delta);
+        renderer.render(scene, camera);
+    }
+    animate();
+</script>
+</body>
+</html>

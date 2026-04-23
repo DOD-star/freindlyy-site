@@ -3,174 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOHRA HUB | بوابة الأساطير 🎮</title>
+    <title>SOHRA ULTIMATE | EYAD 👑</title>
     <style>
-        :root { --neon: #00f2ff; --pink: #ff00ff; --gold: #ffd700; --bg: #05070a; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; transition: 0.3s; }
+        :root { --pink: #ff00ff; --gold: #ffd700; --neon: #cc00ff; --bg: #050505; }
+        * { box-sizing: border-box; font-family: 'Orbitron', sans-serif; }
         
         body { 
             margin: 0; background: var(--bg); color: white; height: 100vh; overflow: hidden;
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
-                        url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000');
             background-size: cover; background-position: center;
-            display: flex; justify-content: center; align-items: center;
+            transition: background-image 0.8s ease-in-out;
+            background-attachment: fixed;
         }
 
-        /* شاشة التحميل الدرامية */
+        body::before {
+            content: ''; position: fixed; inset: 0; 
+            background: radial-gradient(circle, transparent, rgba(0,0,0,0.9)); z-index: -1;
+        }
+
+        /* --- شاشة التحميل --- */
         #loader-screen {
-            position: fixed; inset: 0; background: #000; z-index: 2000;
+            position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .loader-bar { width: 300px; height: 10px; background: #111; border-radius: 10px; overflow: hidden; margin-top: 20px; border: 1px solid #333; }
-        .progress { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 15px var(--neon); }
 
-        /* الكارت الرئيسي */
-        #reg-card {
-            display: none; background: rgba(10, 10, 20, 0.95); padding: 30px; border-radius: 25px;
-            border: 1px solid var(--neon); width: 90%; max-width: 450px; text-align: center;
-            box-shadow: 0 0 40px rgba(0, 242, 255, 0.2);
+        #eyad-title {
+            font-size: 4rem; font-weight: 900; color: #fff;
+            text-shadow: 0 0 10px var(--pink), 0 0 30px var(--neon), 0 0 50px var(--pink);
+            position: absolute; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* منطقة الصورة والتاج */
-        .avatar-wrapper { position: relative; width: 140px; height: 140px; margin: 0 auto 20px; }
-        #main-pfp { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon); background: #000; }
-        #crown-img { 
-            position: absolute; top: -35px; left: 50%; transform: translateX(-50%); 
-            width: 80px; z-index: 10; display: none; filter: drop-shadow(0 0 5px var(--gold));
+        .loading-ui { position: absolute; bottom: 10%; width: 300px; text-align: center; }
+        .bar-bg { width: 100%; height: 8px; background: #1a1a1a; border-radius: 20px; margin-top: 15px; overflow: hidden; }
+        .bar-fill { width: 0%; height: 100%; background: linear-gradient(to right, var(--pink), var(--gold)); }
+
+        .zoom-effect { animation: superZoom 2.5s forwards ease-in-out; }
+        @keyframes superZoom { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(40); opacity: 0; } }
+
+        /* --- الصالة الرئيسية --- */
+        #main-content { display: none; opacity: 0; transition: 1.5s; height: 100vh; }
+        
+        header { 
+            padding: 20px 60px; display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+        .profile-btn { 
+            display: flex; align-items: center; gap: 15px; cursor: pointer; 
+            padding: 8px 25px; border-radius: 50px; border: 2px solid var(--pink);
+            background: rgba(255, 0, 255, 0.1); backdrop-filter: blur(10px);
+        }
+        .profile-btn img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #fff; }
+
+        .game-section { height: 80vh; display: flex; align-items: center; justify-content: center; position: relative; }
+        .carousel { display: flex; gap: 30px; overflow-x: auto; scroll-behavior: smooth; width: 95%; padding: 50px; scrollbar-width: none; }
+        .carousel::-webkit-scrollbar { display: none; }
+
+        .card { 
+            min-width: 340px; height: 500px; background: #000; border-radius: 30px; 
+            border: 1px solid rgba(255,255,255,0.1); overflow: hidden; cursor: pointer; position: relative;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; transition: 0.6s; }
+        
+        /* طبقة المعلومات المتطورة */
+        .card-info {
+            position: absolute; bottom: 0; width: 100%; padding: 30px 20px;
+            background: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0.5) 70%, transparent);
+            transform: translateY(60px); transition: 0.5s;
         }
 
-        /* اختيار الأفاتار الكرتون */
-        .avatars-list { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .av-item { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-        .av-item:hover { border-color: var(--neon); transform: scale(1.1); }
-
-        /* المدخلات */
-        .inputs { display: flex; flex-direction: column; gap: 12px; }
-        input, select { 
-            padding: 12px; background: #000; border: 1px solid #333; color: white; 
-            border-radius: 10px; font-size: 1rem; outline: none; text-align: center;
+        .meta-data { 
+            display: flex; gap: 15px; justify-content: center; margin-top: 10px;
+            font-size: 0.75rem; color: var(--gold); opacity: 0; transition: 0.5s;
         }
-        input:focus { border-color: var(--neon); }
 
-        .btn-go {
-            width: 100%; padding: 15px; margin-top: 20px; border-radius: 10px; border: none;
-            background: var(--neon); color: #000; font-weight: bold; font-size: 1.2rem; cursor: pointer;
+        .card-tag {
+            background: var(--pink); padding: 3px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: bold;
         }
-        .btn-go:hover { box-shadow: 0 0 20px var(--neon); }
 
-        .fade-out { opacity: 0; pointer-events: none; transform: scale(1.1); }
+        .card h3 { margin: 10px 0; color: #fff; font-size: 1.8rem; }
+        .card p { margin: 0; color: #aaa; font-size: 0.85rem; line-height: 1.5; height: 0; opacity: 0; transition: 0.5s; overflow: hidden; }
+
+        .card:hover { 
+            border-color: var(--pink); transform: scale(1.05);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .card:hover img { opacity: 0.7; transform: scale(1.1); }
+        .card:hover .card-info { transform: translateY(0); }
+        .card:hover p, .card:hover .meta-data { opacity: 1; height: auto; margin-top: 10px; }
+
+        .arrow { 
+            position: absolute; top: 50%; transform: translateY(-50%); width: 60px; height: 60px; 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            border-radius: 50%; cursor: pointer; z-index: 100; font-size: 25px; backdrop-filter: blur(10px);
+        }
+        .arrow:hover { background: var(--pink); border-color: var(--pink); }
+        .left { left: 15px; }
+        .right { right: 15px; }
+
+        .news-line { position: fixed; bottom: 0; width: 100%; background: #000; padding: 12px; border-top: 1px solid #222; }
+        .ticker-txt { white-space: nowrap; animation: run 25s linear infinite; color: var(--gold); font-size: 0.9rem; font-weight: bold; }
+        @keyframes run { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
     </style>
 </head>
-<body>
+<body id="mainBody" style="background-image: url('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2000');">
 
-    <audio id="bgMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+    <audio id="hoverSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
 
     <div id="loader-screen">
-        <h2 style="letter-spacing: 5px; color: var(--neon);">SOHRA GAMING</h2>
-        <div class="loader-bar"><div class="progress" id="pg-bar"></div></div>
-        <p id="pg-text" style="margin-top: 10px;">0%</p>
+        <div id="eyad-title">EYAD</div>
+        <div class="loading-ui">
+            <div style="color: var(--pink); letter-spacing: 2px; font-size: 0.8rem;" id="load-status">INITIALIZING SYSTEM...</div>
+            <div class="bar-bg"><div id="bar-fill" class="bar-fill"></div></div>
+        </div>
     </div>
 
-    <div id="reg-card">
-        <div class="avatar-wrapper">
-            <img id="crown-img" src=""> <img id="main-pfp" src="https://api.dicebear.com/7.x/avataaars/svg?seed=1">
-        </div>
+    <div id="main-content">
+        <header>
+            <div class="profile-btn" onclick="window.location.href='register.html'">
+                <img id="user-pfp" src="">
+                <span id="user-name" style="font-weight: bold; color: #fff;">إياد</span>
+            </div>
+            <div style="color: var(--gold); font-size: 1.2rem; font-weight: 900;">SOHRA ELITE</div>
+        </header>
 
-        <div class="avatars-list">
-            <img class="av-item" src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" onclick="changeAv(this.src)">
-            <img class="av-item" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" onclick="changeAv(this.src)">
-            <img class="av-item" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" onclick="changeAv(this.src)">
-            <label style="background:#222; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                🖼️ <input type="file" hidden accept="image/*" onchange="upload(this)">
-            </label>
-        </div>
+        <main class="game-section">
+            <button class="arrow left" onclick="scrollTrack(-450)">❮</button>
+            <div class="carousel" id="carousel">
+                
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000')" onclick="openGame('battlefield.html')">
+                    <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">ACTION</span>
+                        <h3>ساحة المعركة</h3>
+                        <p>واجه الخصوم في قتالات مباشرة وكن الأخير صموداً في المملكة.</p>
+                        <div class="meta-data">
+                            <span>👥 2-10 Players</span>
+                            <span>⭐ 4.9/5</span>
+                            <span>💾 120MB</span>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="inputs">
-            <input type="text" id="u-name" placeholder="اسمك الحقيقي">
-            <input type="text" id="u-title" placeholder="لقبك (مثلاً: الكابوس)">
-            <input type="text" id="u-country" placeholder="بلدك">
-            <select id="u-gender" onchange="updateCrown()">
-                <option value="">اختار النوع</option>
-                <option value="king">ملك (تاج رجالي 👑)</option>
-                <option value="queen">ملكة (تاج بناتي 👸)</option>
-            </select>
-        </div>
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2000')" onclick="openGame('stories.html')">
+                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">STORY</span>
+                        <h3>مجلس الحكايات</h3>
+                        <p>رحلة سينمائية غامرة وسط أساطير وتاريخ ملوك السهرة.</p>
+                        <div class="meta-data">
+                            <span>👥 Single Player</span>
+                            <span>⭐ 4.7/5</span>
+                            <span>💾 85MB</span>
+                        </div>
+                    </div>
+                </div>
 
-        <button class="btn-go" onclick="finish()">دخول المجلس 🚀</button>
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1511193311914-0346f16efe90?q=80&w=2000')" onclick="openGame('challenge.html')">
+                    <img src="https://images.unsplash.com/photo-1511193311914-0346f16efe90?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">PUZZLE</span>
+                        <h3>تحدي الملوك</h3>
+                        <p>ألعاب استراتيجية تتطلب ذكاءً حاداً وسرعة بديهة مذهلة.</p>
+                        <div class="meta-data">
+                            <span>👥 1-4 Players</span>
+                            <span>⭐ 4.8/5</span>
+                            <span>💾 45MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" onmouseenter="changeBg('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2000')" onclick="openGame('market.html')">
+                    <img src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?w=600">
+                    <div class="card-info">
+                        <span class="card-tag">TYCOON</span>
+                        <h3>سوق الذهب</h3>
+                        <p>قم ببناء إمبراطوريتك التجارية ونافس على لقب أغنى ملك.</p>
+                        <div class="meta-data">
+                            <span>👥 Multiplayer</span>
+                            <span>⭐ 4.5/5</span>
+                            <span>💾 30MB</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <button class="arrow right" onclick="scrollTrack(450)">❯</button>
+        </main>
+
+        <div class="news-line"><div class="ticker-txt"> 👑 أهلاً بك يا إياد .. نظام السهرة المتكامل قيد التشغيل .. جميع التحديات متاحة الآن 👑 </div></div>
     </div>
 
     <script>
-        // 1. نظام التحميل 10 ثواني
-        let p = 0;
-        const bar = document.getElementById('pg-bar');
-        const txt = document.getElementById('pg-text');
-        
-        const load = setInterval(() => {
-            p++;
-            bar.style.width = p + "%";
-            txt.innerText = p + "%";
-            if(p >= 100) {
-                clearInterval(load);
-                document.getElementById('loader-screen').classList.add('fade-out');
+        const title = document.getElementById('eyad-title');
+        let prog = 0;
+        let mover;
+
+        window.onload = () => {
+            if(sessionStorage.getItem('done_eyad')) {
+                document.getElementById('loader-screen').style.display = 'none';
+                enterApp();
+            } else {
+                startMover();
+                runLoader();
+            }
+        };
+
+        function startMover() {
+            mover = setInterval(() => {
+                if(prog < 100) {
+                    const x = Math.random() * (window.innerWidth - 200);
+                    const y = Math.random() * (window.innerHeight - 200);
+                    title.style.left = x + 'px';
+                    title.style.top = y + 'px';
+                }
+            }, 500);
+        }
+
+        function runLoader() {
+            const fill = document.getElementById('bar-fill');
+            const status = document.getElementById('load-status');
+            const intv = setInterval(() => {
+                prog++;
+                fill.style.width = prog + "%";
+                status.innerText = `SYNCING EYAD... ${prog}%`;
+                if(prog >= 100) {
+                    clearInterval(intv);
+                    clearInterval(mover);
+                    zoomSequence();
+                }
+            }, 50); 
+        }
+
+        function zoomSequence() {
+            title.style.left = '50%';
+            title.style.top = '50%';
+            title.style.transform = 'translate(-50%, -50%)';
+            setTimeout(() => {
+                document.querySelector('.loading-ui').style.opacity = '0';
+                title.classList.add('zoom-effect');
                 setTimeout(() => {
                     document.getElementById('loader-screen').style.display = 'none';
-                    document.getElementById('reg-card').style.display = 'block';
-                    document.getElementById('bgMusic').play();
-                }, 1000);
-            }
-        }, 100);
-
-        // 2. تغيير الصور
-        function changeAv(s) { document.getElementById('main-pfp').src = s; }
-        function upload(i) {
-            const r = new FileReader();
-            r.onload = e => document.getElementById('main-pfp').src = e.target.result;
-            r.readAsDataURL(i.files[0]);
+                    sessionStorage.setItem('done_eyad', 'true');
+                    enterApp();
+                }, 2200);
+            }, 1000);
         }
 
-        // 3. تحديث التاج
-        function updateCrown() {
-            const g = document.getElementById('u-gender').value;
-            const c = document.getElementById('crown-img');
-            if(g === 'king') {
-                c.src = "king-crown.png"; 
-                c.style.display = 'block';
-            } else if(g === 'queen') {
-                c.src = "queen-crown.png"; 
-                c.style.display = 'block';
-            } else {
-                c.style.display = 'none';
-            }
+        function enterApp() {
+            const main = document.getElementById('main-content');
+            main.style.display = 'block';
+            setTimeout(() => main.style.opacity = '1', 100);
+            document.getElementById('user-pfp').src = localStorage.getItem('user_photo') || '';
+            document.getElementById('user-name').innerText = localStorage.getItem('user_name') || 'إياد';
         }
 
-        // 4. الحفظ النهائي والربط بصفحة اللوبي الـ 3D
-        function finish() {
-            const data = {
-                name: document.getElementById('u-name').value,
-                title: document.getElementById('u-title').value,
-                country: document.getElementById('u-country').value,
-                photo: document.getElementById('main-pfp').src,
-                gender: document.getElementById('u-gender').value
-            };
-
-            if(!data.name || !data.title) return alert("البيانات ناقصة يا بطل!");
-
-            // تخزين الاسم عشان يظهر في صفحة الـ 3D
-            localStorage.setItem('warrior_name', data.name);
-            localStorage.setItem('user_name', data.name);
-            localStorage.setItem('user_title', data.title);
-            localStorage.setItem('user_country', data.country);
-            localStorage.setItem('user_photo', data.photo);
-            localStorage.setItem('user_gender', data.gender);
-            localStorage.setItem('is_logged', 'true');
-
-            // هينقلك لصفحة اللوبي اللي فيها البطل 3D
-            window.location.href = "battle_lobby.html";
+        function changeBg(imgUrl) {
+            document.getElementById('mainBody').style.backgroundImage = `url('${imgUrl}')`;
+            const hSound = document.getElementById('hoverSound');
+            hSound.currentTime = 0;
+            hSound.play().catch(()=>{});
         }
 
-        // لو مسجل قبل كدة يدخله على اللوبي فوراً
-        if(localStorage.getItem('is_logged')) {
-            window.location.href = "battle_lobby.html";
+        function openGame(pageUrl) {
+            const cSound = document.getElementById('clickSound');
+            cSound.play().catch(()=>{});
+            setTimeout(() => {
+                window.location.href = pageUrl;
+            }, 200);
+        }
+
+        function scrollTrack(dist) {
+            document.getElementById('carousel').scrollBy({ left: dist, behavior: 'smooth' });
         }
     </script>
 </body>

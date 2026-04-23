@@ -2,175 +2,199 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GHOST LOBBY 3D</title>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <title>SOHRA ELITE | PRO LOBBY V10</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --war-red: #ff0000; --gold: #ffd700; --bg: #050505; }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); overflow: hidden; font-family: 'Orbitron', sans-serif; }
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; }
-        
-        /* واجهة المستخدم (UI) */
-        #ui-layer {
-            position: absolute; inset: 0; z-index: 10; pointer-events: none;
-            display: flex; flex-direction: column; justify-content: space-between; padding: 30px;
-        }
-        .stat-box { 
-            background: rgba(255, 0, 0, 0.1); 
-            backdrop-filter: blur(15px); 
-            border-left: 5px solid var(--war-red); 
-            padding: 15px 30px; 
-            color: white; 
-            pointer-events: auto; 
-            width: fit-content;
-            box-shadow: 0 0 20px rgba(255,0,0,0.1);
-        }
-        .btn-deploy { 
-            background: var(--war-red); 
-            color: white; 
-            padding: 20px 80px; 
-            font-family: 'Black Ops One'; 
-            font-size: 2rem; 
-            border: none; 
-            cursor: pointer; 
-            clip-path: polygon(15% 0, 100% 0, 85% 100%, 0 100%); 
-            transition: 0.4s; 
-            pointer-events: auto; 
-            align-self: center; 
-            margin-bottom: 30px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .btn-deploy:hover { transform: scale(1.1); box-shadow: 0 0 60px var(--war-red); }
-        
-        #loading-screen { 
-            position: fixed; inset: 0; background: #000; z-index: 100; 
-            display: flex; justify-content: center; align-items: center; 
-            color: var(--war-red); font-family: 'Black Ops One'; font-size: 1.5rem; 
-        }
+        :root { --neon: #4fc3f7; --green: #2ecc71; --red: #ff4d4d; --glass: rgba(0,0,0,0.85); }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Orbitron', sans-serif; color: white; text-transform: uppercase; }
+        #bg-image { position: fixed; inset: 0; z-index: -1; background: linear-gradient(rgba(0,0,0,0.5), #000), url('bg.gif'); background-size: cover; }
+
+        /* القائمة العلوية والخط النيون */
+        .top-nav { position: absolute; top: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; gap: 50px; z-index: 1000; background: linear-gradient(to bottom, rgba(0,0,0,1), transparent); }
+        .nav-link { position: relative; text-decoration: none; color: #777; font-size: 14px; letter-spacing: 2px; padding: 10px 5px; transition: 0.3s; }
+        .nav-link:hover { color: #fff; }
+        .nav-link.active { color: var(--neon); }
+        .nav-link.active::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 3px; background: var(--neon); box-shadow: 0 0 15px var(--neon); }
+
+        /* البروفايل العلوي */
+        .profile-card { position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 12px; padding: 10px 25px; background: var(--glass); border: 1px solid var(--neon); border-radius: 50px; text-decoration: none; color: white; z-index: 1100; transition: 0.3s; }
+        .profile-card:hover { background: rgba(79, 195, 247, 0.1); }
+        .avatar { width: 42px; height: 42px; border-radius: 50%; background: #111; border: 2px solid var(--neon); box-shadow: 0 0 10px var(--neon); }
+
+        /* المنيو الجانبي وانبوكس زيزو */
+        .side-menu { position: absolute; top: 120px; left: 20px; width: 230px; z-index: 1000; }
+        .menu-btn { width: 100%; background: #0a0a0a; border: 1px solid #222; color: #fff; padding: 14px; cursor: pointer; text-align: left; font-size: 11px; margin-bottom: 6px; transition: 0.2s; }
+        .menu-btn:hover { border-color: var(--neon); color: var(--neon); }
+        .inbox-area { background: #050505; border: 1px solid #222; padding: 12px; font-size: 10px; height: 180px; overflow-y: auto; scrollbar-width: thin; }
+        .zizo-msg { color: #ff9f43; margin-bottom: 8px; border-bottom: 1px solid #111; padding-bottom: 5px; font-family: 'Cairo', sans-serif; line-height: 1.4; animation: slideMsg 0.3s ease; }
+
+        /* السكواد (اللاعبين تحت) */
+        .squad-row { position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 1000; }
+        .player-slot { width: 180px; height: 100px; background: rgba(0,0,0,0.85); border-bottom: 4px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.3s; }
+        .player-slot.active { border-color: var(--green); background: rgba(46, 204, 113, 0.05); }
+        .leader-star { position: absolute; top: 8px; right: 10px; color: gold; font-size: 16px; text-shadow: 0 0 8px orange; }
+
+        /* التحكم (مايك، سماعة، باب) */
+        .controls { display: flex; gap: 15px; margin-top: 10px; }
+        .tool-btn { cursor: pointer; position: relative; font-size: 22px; transition: 0.2s; }
+        .slash-x { position: absolute; top: 0; left: 0; color: var(--red); font-weight: bold; font-size: 20px; display: none; text-shadow: 0 0 5px black; }
+
+        /* البحث عن جيم */
+        .start-zone { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); text-align: center; }
+        .main-btn { width: 400px; height: 85px; background: var(--green); color: black; font-family: 'Black Ops One'; font-size: 34px; border: none; cursor: pointer; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .main-btn.searching { background: var(--red); color: white; }
+        #search-timer { color: var(--green); font-weight: bold; margin-bottom: 12px; visibility: hidden; font-size: 20px; text-shadow: 0 0 10px var(--green); }
+
+        /* الموديلات */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(5px); }
+        .modal-box { width: 320px; background: #0f0f0f; padding: 30px; border: 1px solid var(--neon); text-align: center; box-shadow: 0 0 30px rgba(79, 195, 247, 0.2); }
+
+        @keyframes slideMsg { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">DEPLOYING GHOST...</div>
+    <div id="bg-image"></div>
 
-    <div id="ui-layer">
-        <div class="stat-box">
-            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Operator</div>
-            <div id="p-name" style="color:var(--gold); font-size: 1.6rem;">GHOST</div>
+    <nav class="top-nav">
+        <a href="lobby.html" class="nav-link active">PLAY</a>
+        <a href="shop.html" class="nav-link">SHOP</a>
+        <a href="settings.html" class="nav-link">SETTINGS</a>
+        <a href="profile.html" class="nav-link">PROFILE</a>
+    </nav>
+
+    <a href="profile.html" class="profile-card">
+        <div class="avatar"></div>
+        <div>
+            <div id="player-name">RECRUIT</div>
+            <div style="font-size: 9px; color: var(--green); letter-spacing: 1px;">LEVEL 1</div>
         </div>
-        <button class="btn-deploy">Start Mission</button>
+    </a>
+
+    <div class="side-menu">
+        <button class="menu-btn" onclick="openM('addM')">ADD FRIEND</button>
+        <button class="menu-btn" onclick="openM('invM')">INVITE FRIENDS</button>
+        <div class="inbox-area">
+            <div style="color:#444; border-bottom:1px solid #222; margin-bottom:10px; font-size:9px; letter-spacing: 1px;">SYSTEM INBOX [ZIZO]</div>
+            <div id="zizo-log"></div>
+        </div>
     </div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+    <div class="squad-row">
+        <div class="player-slot active">
+            <span class="leader-star">★</span>
+            <div id="my-slot-name" style="font-size:12px; font-weight:bold; color:var(--neon);">YOU</div>
+            <div class="controls">
+                <div class="tool-btn" onclick="toggleT('mic')">
+                    <span id="mic-icon">🎤</span><span id="mic-x" class="slash-x">✕</span>
+                </div>
+                <div class="tool-btn" onclick="toggleT('spk')">
+                    <span id="spk-icon">🎧</span><span id="spk-x" class="slash-x">✕</span>
+                </div>
+                <div class="tool-btn" style="color:var(--red);" onclick="location.reload()">🚪</div>
+            </div>
+        </div>
+        <div class="player-slot" style="color:#333; font-size:10px;">EMPTY SLOT</div>
+        <div class="player-slot" style="color:#333; font-size:10px;">EMPTY SLOT</div>
+        <div class="player-slot" style="color:#333; font-size:10px;">EMPTY SLOT</div>
+    </div>
+
+    <div class="start-zone">
+        <div id="search-timer">SEARCHING: 00:00</div>
+        <button id="startBtn" class="main-btn" onclick="startMatch()">START GAME</button>
+    </div>
+
+    <div id="addM" class="modal">
+        <div class="modal-box">
+            <h3 style="color:var(--neon)">ADD FRIEND</h3>
+            <input type="text" id="friendID" placeholder="PLAYER ID..." style="width:90%; padding:12px; margin-bottom:20px; background:#000; border:1px solid #333; color:white; font-family:'Orbitron';">
+            <button onclick="addZizo('طلب صداقة قيد الإرسال...'); closeM('addM')" style="width:100%; padding:12px; background:var(--neon); border:none; font-weight:bold; cursor:pointer;">SEND REQUEST</button>
+            <button onclick="closeM('addM')" style="margin-top:10px; background:none; border:none; color:#555; cursor:pointer;">CANCEL</button>
+        </div>
+    </div>
+
+    <div id="invM" class="modal">
+        <div class="modal-box">
+            <h3 style="color:var(--neon)">INVITE FRIENDS</h3>
+            <p style="font-size:13px; color:#666; margin-bottom:25px;">No friends are currently online.</p>
+            <button onclick="closeM('invM')" style="width:100%; padding:12px; background:none; border:1px solid #333; color:white; cursor:pointer;">BACK TO LOBBY</button>
+        </div>
+    </div>
 
     <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
+        import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
 
-        let scene, camera, renderer, mixer, clock, model;
+        // ضبط الاسم
+        const storedName = localStorage.getItem('username') || "OPERATOR_01";
+        document.getElementById('player-name').innerText = storedName;
+        document.getElementById('my-slot-name').innerText = storedName;
 
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050505);
-            scene.fog = new THREE.Fog(0x050505, 1, 8);
+        // زيزو
+        window.addZizo = (msg) => {
+            const log = document.getElementById('zizo-log');
+            const div = document.createElement('div');
+            div.className = 'zizo-msg';
+            div.innerHTML = `<span style="font-weight:bold;">[ZIZO]:</span> ${msg}`;
+            log.prepend(div);
+        };
 
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 1.4, 3.2); // قربنا الكاميرا عشان الشخصية تبان واضحة
+        // المايك والسماعة
+        window.toggleT = (type) => {
+            const x = document.getElementById(type + '-x');
+            const icon = document.getElementById(type + '-icon');
+            const isOff = x.style.display === 'none' || x.style.display === '';
+            x.style.display = isOff ? 'block' : 'none';
+            icon.style.opacity = isOff ? '0.2' : '1';
+            addZizo(type === 'mic' ? (isOff ? "تم كتم الميكروفون" : "الميكروفون نشط الآن") : (isOff ? "تم إيقاف الصوت" : "الصوت نشط الآن"));
+        };
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
-            document.body.appendChild(renderer.domElement);
-
-            clock = new THREE.Clock();
-
-            // إضاءة سينمائية احترافية
-            scene.add(new THREE.AmbientLight(0xffffff, 1.2)); // نور عام
-            
-            const mainLight = new THREE.SpotLight(0xffffff, 150); // نور أبيض "توب"
-            mainLight.position.set(2, 5, 2);
-            mainLight.castShadow = true;
-            scene.add(mainLight);
-
-            const redLight = new THREE.PointLight(0xff0000, 80); // نور أحمر من الجنب بيدي جو حربي
-            redLight.position.set(-3, 2, 2);
-            scene.add(redLight);
-
-            // الأرضية (شبكة ليزر)
-            const grid = new THREE.GridHelper(20, 50, 0xff0000, 0x111111);
-            scene.add(grid);
-
-            // تحميل الموديل (الخطوة دي هي اللي فيها اللعبة كلها)
-            const loader = new GLTFLoader();
-            
-            // تأكد إن ملفك اسمه بالضبط hero.glb وموجود مع الملف ده في نفس الفولدر
-            loader.load('hero.glb', (gltf) => {
-                model = gltf.scene;
-                
-                // تظبيط الحجم أوتوماتيك مهما كان الموديل ضخم أو قزم
-                const box = new THREE.Box3().setFromObject(model);
-                const size = box.getSize(new THREE.Vector3()).y;
-                const scale = 2 / size; 
-                model.scale.set(scale, scale, scale);
-                model.position.y = 0;
-
-                model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-                scene.add(model);
-
-                // تشغيل الأنيميشن فوراً (لو الملف فيه حركات)
-                if (gltf.animations.length > 0) {
-                    mixer = new THREE.AnimationMixer(model);
-                    mixer.clipAction(gltf.animations[0]).play();
-                } else {
-                    console.log("⚠️ لا يوجد أنيميشن في الملف.");
-                }
-
-                document.getElementById('loading-screen').style.display = 'none';
-            }, undefined, (error) => {
-                // لو جوجل رفض، هيطلع إيرور هنا بالسبب
-                document.getElementById('loading-screen').innerHTML = "<span style='color:red'>خطأ: جوجل مش شايف ملف hero.glb! تأكد إنهم جنب بعض وشغل الـ Live Server.</span>";
-                console.error("❌ جوجل رفض الملف بسبب: ", error);
-            });
-
-            animate();
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const delta = clock.getDelta();
-            
-            // دوران خفيف تلقائي للكاميرا بيدي جو سينمائي
-            camera.position.x = Math.sin(Date.now() * 0.0005) * 0.1;
-            camera.lookAt(0, 1, 0);
-
-            // دوران خفيف للشخصية لو مش بتتحرك عشان متكونش صنم
-            if (model && !mixer) {
-                model.rotation.y += 0.002;
+        // البحث عن جيم
+        let isSearching = false, seconds = 0, matchTimer;
+        window.startMatch = () => {
+            isSearching = !isSearching;
+            const btn = document.getElementById('startBtn');
+            const timerDiv = document.getElementById('search-timer');
+            if(isSearching) {
+                btn.innerText = "CANCEL"; btn.classList.add('searching');
+                timerDiv.style.visibility = 'visible';
+                addZizo("جارٍ البحث عن خادم متاح...");
+                matchTimer = setInterval(() => {
+                    seconds++;
+                    let s = (seconds % 60).toString().padStart(2, '0');
+                    timerDiv.innerText = `SEARCHING: 00:${s}`;
+                    if(seconds >= 7) window.location.href="battle.html";
+                }, 1000);
+            } else {
+                btn.innerText = "START GAME"; btn.classList.remove('searching');
+                timerDiv.style.visibility = 'hidden'; clearInterval(matchTimer); seconds = 0;
+                addZizo("تم إلغاء عملية البحث.");
             }
-            
-            if (mixer) mixer.update(delta);
-            renderer.render(scene, camera);
-        }
+        };
 
-        // جلب الاسم من localStorage (أو اسم افتراضي)
-        document.getElementById('p-name').innerText = localStorage.getItem('warrior_name') || "GHOST_SOLDIER";
+        window.openM = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeM = (id) => document.getElementById(id).style.display = 'none';
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        // 3D Player Setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.4, 4);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+        const spot = new THREE.SpotLight(0xffffff, 12); spot.position.set(0, 5, 3); scene.add(spot);
+        
+        let mixer, clock = new THREE.Clock();
+        new GLTFLoader().load('./hero.glb', (g) => {
+            const m = g.scene; m.scale.set(0.9, 0.9, 0.9); scene.add(m);
+            mixer = new THREE.AnimationMixer(m); mixer.clipAction(g.animations[0]).play();
         });
+        function animate() { requestAnimationFrame(animate); if(mixer) mixer.update(clock.getDelta()); renderer.render(scene, camera); }
+        animate();
 
-        init();
+        // ترحيب زيزو
+        setTimeout(() => addZizo("مرحباً بك في SOHRA ELITE. القوات بانتظار أوامرك!"), 500);
     </script>
 </body>
 </html>

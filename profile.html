@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { background: #0f0f0f; color: white; font-family: 'Cairo', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .form-card { background: #1a1a1a; padding: 30px; border-radius: 20px; border: 2px solid #ff8c00; width: 350px; box-shadow: 0 0 30px rgba(255,140,0,0.2); }
+        h2 { text-align: center; color: #ff8c00; }
+        
+        .avatar-zone { text-align: center; margin-bottom: 20px; position: relative; }
+        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #ff8c00; object-fit: cover; background: #333; cursor: pointer; }
+        
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        .btn-start { width: 100%; padding: 15px; background: #ff8c00; border: none; color: black; font-weight: bold; font-size: 18px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="form-card">
+        <h2>بيانات السهرة</h2>
+        <div class="avatar-zone">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" id="avatarImg" class="avatar-preview">
+            <input type="file" id="fileInput" style="display:none" accept="image/*">
+            <p style="font-size:12px; color:#777">اضغط لتغيير الصورة</p>
+        </div>
+
+        <input type="text" id="name" placeholder="الاسم (مثلاً: إياد)">
+        <input type="text" id="nickname" placeholder="اللقب (مثلاً: هيرو)">
+        <input type="text" id="country" placeholder="البلد">
+        
+        <select id="gender">
+            <option value="male">راجل</option>
+            <option value="female">بنت</option>
+        </select>
+
+        <button class="btn-start" onclick="saveAndJoin()">دخول السهرة</button>
+    </div>
+
+    <script>
+        const avatarImg = document.getElementById('avatarImg');
+        const fileInput = document.getElementById('fileInput');
+
+        avatarImg.onclick = () => fileInput.click();
+        
+        fileInput.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = () => avatarImg.src = reader.result;
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        function saveAndJoin() {
+            const userData = {
+                name: document.getElementById('name').value,
+                nickname: document.getElementById('nickname').value,
+                country: document.getElementById('country').value,
+                gender: document.getElementById('gender').value,
+                avatar: avatarImg.src
+            };
+            localStorage.setItem('user_p', JSON.stringify(userData));
+            window.location.href = 'main_menu.html';
+        }
+    </script>
+</body>
+</html>

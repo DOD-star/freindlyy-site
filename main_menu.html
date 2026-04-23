@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>حكايات السهرة | القائمة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Reem+Kufi:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #ff8c00; --purple: #2a0944; }
+        body { 
+            margin: 0; padding: 0; font-family: 'Cairo', sans-serif;
+            background: #050505; color: white; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+        }
+
+        /* الخلفية المتحركة */
+        .bg-animate {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, var(--purple) 0%, #050505 100%);
+            z-index: -1;
+        }
+
+        /* كارت البروفايل */
+        .user-tag {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px);
+            padding: 8px 15px; border-radius: 50px;
+            display: flex; align-items: center; gap: 10px; border: 1px solid var(--gold);
+        }
+        .user-tag img { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--gold); }
+
+        .logo-area h1 { 
+            font-family: 'Reem Kufi', sans-serif; font-size: 65px; margin: 0;
+            color: var(--gold); text-shadow: 0 0 30px rgba(255,140,0,0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* أزرار المنيو بالستايل اللي عجبك */
+        .menu-container { display: flex; flex-direction: column; gap: 15px; width: 330px; z-index: 10; }
+        
+        .menu-btn {
+            position: relative; padding: 18px; border: none; border-radius: 12px;
+            font-size: 19px; font-weight: bold; font-family: 'Cairo';
+            cursor: pointer; transition: 0.3s; color: white; 
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: right; padding-right: 25px;
+        }
+
+        .btn-create { border-right: 5px solid var(--gold); }
+        .btn-join { border-right: 5px solid #00d2ff; }
+
+        .menu-btn:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(255,140,0,0.15);
+        }
+
+        .menu-btn span { display: block; font-size: 11px; color: #999; font-weight: normal; }
+
+        /* زيزو الروبوت */
+        .zizo-side {
+            position: absolute; bottom: 10px; left: 30px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .bubble {
+            background: white; color: black; padding: 8px 15px;
+            border-radius: 15px; font-size: 13px; font-weight: bold;
+            position: relative; margin-bottom: 10px; opacity: 0.8;
+        }
+        .bubble::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%;
+            border: 10px solid transparent; border-top-color: white; transform: translateX(-50%);
+        }
+
+        /* النوافذ الشفافة (Modals) */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal {
+            background: rgba(20, 20, 30, 0.8); border: 2px solid var(--gold);
+            padding: 40px; border-radius: 20px; text-align: center; width: 85%; max-width: 400px;
+        }
+        .code-input {
+            width: 80%; padding: 15px; background: #000; border: 1px solid var(--gold);
+            color: var(--gold); font-size: 25px; text-align: center; border-radius: 10px; margin: 20px 0;
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animate"></div>
+
+    <div class="user-tag">
+        <span id="uName">..</span>
+        <img src="" id="uImg">
+    </div>
+
+    <div class="logo-area">
+        <h1>حكايات السهرة</h1>
+    </div>
+
+    <div class="menu-container">
+        <button class="menu-btn btn-create" onclick="openCreate()">
+            إنشاء غرفة جديدة
+            <span>ابدأ سهرة جديدة مع أصحابك</span>
+        </button>
+
+        <button class="menu-btn btn-join" onclick="openJoin()">
+            دخول غرفة سابقة
+            <span>اكتب الكود وانضم للغرفة</span>
+        </button>
+    </div>
+
+    <div class="zizo-side">
+        <div class="bubble" id="zizoTalk">ما تخلص ياض إنت وهو!</div>
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Zizo" style="width: 120px;">
+    </div>
+
+    <div id="modalJoin" class="overlay">
+        <div class="modal">
+            <h2 style="color:var(--gold)">فين الكود؟</h2>
+            <input type="text" id="cInput" class="code-input" placeholder="0000">
+            <br>
+            <button onclick="confirm()" style="background:var(--gold); padding:10px 30px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">دخول</button>
+            <button onclick="closeAll()" style="background:none; border:none; color:white; margin-right:10px; cursor:pointer;">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        // تحميل البيانات
+        const data = JSON.parse(localStorage.getItem('user_p'));
+        if(data) {
+            document.getElementById('uName').innerText = data.name;
+            document.getElementById('uImg').src = data.avatar;
+        }
+
+        function openCreate() {
+            document.getElementById('zizoTalk').innerText = "زيزو بيفرش الأوضة.. استنى!";
+            setTimeout(() => window.location.href = 'room_3d.html', 2000);
+        }
+
+        function openJoin() {
+            document.getElementById('modalJoin').style.display = 'flex';
+        }
+
+        function closeAll() {
+            document.querySelectorAll('.overlay').forEach(e => e.style.display = 'none');
+        }
+
+        function confirm() {
+            const code = document.getElementById('cInput').value;
+            if(code) window.location.href = 'room_3d.html?code=' + code;
+        }
+    </script>
+</body>
+</html>
