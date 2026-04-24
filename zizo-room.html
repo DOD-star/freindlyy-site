@@ -9,6 +9,7 @@
             --ps-blue: #0072ce;
             --neon-cyan: #00f2ff;
             --ready-green: #2ecc71;
+            --empty-slot: rgba(255, 255, 255, 0.03);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -20,7 +21,6 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            /* الخلفية اللي انت هتجيبها */
             background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('zizo-bg.jpg');
             background-size: cover;
             background-position: center;
@@ -36,7 +36,6 @@
             border-bottom: 2px solid var(--ps-blue);
         }
 
-        /* منطقة اللاعبين */
         .players-hub {
             flex: 1;
             display: grid;
@@ -56,6 +55,14 @@
             border-radius: 50px 15px 15px 50px;
             border-left: 4px solid var(--neon-cyan);
             transition: 0.3s;
+            min-height: 100px;
+        }
+
+        /* شكل المكان الفاضي */
+        .player-slot.empty {
+            border-left: 4px dashed #444;
+            background: var(--empty-slot);
+            opacity: 0.6;
         }
 
         .platform {
@@ -64,6 +71,7 @@
             border: 2px solid var(--neon-cyan);
             overflow: hidden;
             box-shadow: 0 0 15px var(--neon-cyan);
+            background: #111;
         }
 
         .player-avatar { width: 100%; height: 100%; object-fit: cover; }
@@ -72,7 +80,6 @@
         .status-text { font-size: 0.8rem; color: #aaa; }
         .is-ready { color: var(--ready-green) !important; font-weight: bold; }
 
-        /* زرار READY على الشمال */
         .side-menu {
             position: fixed;
             left: 30px;
@@ -99,13 +106,6 @@
             box-shadow: 0 0 30px var(--ready-green);
         }
 
-        .ready-btn:disabled {
-            background: #555;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        /* شاشة أوامر زيزو */
         .zizo-footer {
             background: rgba(0, 0, 0, 0.8);
             padding: 20px;
@@ -118,37 +118,39 @@
 
     <header>
         <div style="font-weight: bold; letter-spacing: 2px;">NEURAL LINK: <span id="room-code" style="color:var(--neon-cyan)">---</span></div>
-        <div>الموضوع السري: <span style="color:red">قيد التجهيز</span></div>
+        <div>الموضوع السري: <span id="mission-status" style="color:orange">في انتظار الفريق...</span></div>
     </header>
 
     <div class="players-hub" id="players-list">
         <div class="player-slot" id="my-slot">
-            <div class="platform"><img src="" id="my-img" class="player-avatar"></div>
+            <div class="platform"><img src="https://via.placeholder.com/70" id="my-img" class="player-avatar"></div>
             <div class="player-info">
-                <h4 id="my-name">تحميل...</h4>
-                <p class="status-text" id="my-status">في انتظارك...</p>
+                <h4 id="my-name">جاري التحميل...</h4>
+                <p class="status-text" id="my-status">أنت متصل الآن</p>
             </div>
         </div>
 
-        <div class="player-slot">
-            <div class="platform"><img src="https://i.pravatar.cc/150?u=bot1" class="player-avatar"></div>
+        <div class="player-slot empty">
+            <div class="platform"></div>
             <div class="player-info">
-                <h4>Siri_Bot</h4>
-                <p class="status-text is-ready">● READY</p>
+                <h4>مكان شاغر</h4>
+                <p class="status-text">في انتظار لاعب...</p>
             </div>
         </div>
-        <div class="player-slot">
-            <div class="platform"><img src="https://i.pravatar.cc/150?u=bot2" class="player-avatar"></div>
+
+        <div class="player-slot empty">
+            <div class="platform"></div>
             <div class="player-info">
-                <h4>Alex_AI</h4>
-                <p class="status-text is-ready">● READY</p>
+                <h4>مكان شاغر</h4>
+                <p class="status-text">في انتظار لاعب...</p>
             </div>
         </div>
-        <div class="player-slot">
-            <div class="platform"><img src="https://i.pravatar.cc/150?u=bot3" class="player-avatar"></div>
+
+        <div class="player-slot empty">
+            <div class="platform"></div>
             <div class="player-info">
-                <h4>Zizo_Junior</h4>
-                <p class="status-text is-ready">● READY</p>
+                <h4>مكان شاغر</h4>
+                <p class="status-text">في انتظار لاعب...</p>
             </div>
         </div>
     </div>
@@ -158,29 +160,31 @@
     </div>
 
     <div class="zizo-footer">
-        <p id="zizo-msg">>>> زيزو: "باقي لاعب واحد فقط لبدء المهمة السرية..."</p>
+        <p id="zizo-msg">>>> زيزو: "مرحباً بك في النظام.. بانتظار انضمام بقية الفريق من طنطا وباقي المحافظات."</p>
     </div>
 
     <script>
-        // جلب بياناتك
-        const userData = JSON.parse(localStorage.getItem('userData')) || {name: "لاعب"};
+        // جلب بياناتك من المتصفح
+        const userData = JSON.parse(localStorage.getItem('userData')) || {name: "لاعب مجهول"};
         const userAvatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/70";
-        const roomCode = localStorage.getItem('activeRoom') || "0000";
+        const roomCode = localStorage.getItem('activeRoom') || "7777";
 
         document.getElementById('my-name').innerText = userData.name;
         document.getElementById('my-img').src = userAvatar;
         document.getElementById('room-code').innerText = roomCode;
 
         function startSecretTopic() {
-            // تغيير حالتك لـ Ready
+            // تفعيل حالة الجاهزية عندك
             document.getElementById('my-status').innerText = "● READY";
             document.getElementById('my-status').classList.add('is-ready');
-            document.getElementById('zizo-msg').innerText = ">>> زيزو: 'اكتمل الفريق! جاري فتح الملف السري الآن...'";
+            document.getElementById('mission-status').innerText = "تم تأكيد الجاهزية";
+            document.getElementById('mission-status').style.color = "var(--ready-green)";
+            document.getElementById('zizo-msg').innerText = ">>> زيزو: 'تم تسجيل جاهزيتك.. سيتم فتح الملف السري فور اكتمال الفريق.'";
             
-            // النقل لآخر صفحة بعد ثانية
+            // تنبيه: جيت هاب هيفتح الصفحة بس مش هيحفظ حالة "Ready" لصحابك التانيين إلا بـ Firebase
             setTimeout(() => {
-                window.location.href = "final-secret.html";
-            }, 1500);
+                alert("جاهز للمهمة! ارفع الملف الثاني (final-secret.html) عشان النقل يشتغل.");
+            }, 1000);
         }
     </script>
 </body>
