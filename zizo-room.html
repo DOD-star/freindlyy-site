@@ -58,7 +58,6 @@
             min-height: 100px;
         }
 
-        /* شكل المكان الفاضي */
         .player-slot.empty {
             border-left: 4px dashed #444;
             background: var(--empty-slot);
@@ -75,7 +74,6 @@
         }
 
         .player-avatar { width: 100%; height: 100%; object-fit: cover; }
-
         .player-info h4 { font-size: 1.1rem; }
         .status-text { font-size: 0.8rem; color: #aaa; }
         .is-ready { color: var(--ready-green) !important; font-weight: bold; }
@@ -101,11 +99,6 @@
             text-transform: uppercase;
         }
 
-        .ready-btn:hover {
-            transform: scale(1.1) rotate(-2deg);
-            box-shadow: 0 0 30px var(--ready-green);
-        }
-
         .zizo-footer {
             background: rgba(0, 0, 0, 0.8);
             padding: 20px;
@@ -122,69 +115,97 @@
     </header>
 
     <div class="players-hub" id="players-list">
-        <div class="player-slot" id="my-slot">
-            <div class="platform"><img src="https://via.placeholder.com/70" id="my-img" class="player-avatar"></div>
-            <div class="player-info">
-                <h4 id="my-name">جاري التحميل...</h4>
-                <p class="status-text" id="my-status">أنت متصل الآن</p>
-            </div>
+        <div class="player-slot empty" id="slot-0">
+            <div class="platform"><img src="" class="player-avatar" style="display:none"></div>
+            <div class="player-info"><h4>مكان شاغر</h4><p class="status-text">في انتظار لاعب...</p></div>
         </div>
-
-        <div class="player-slot empty">
-            <div class="platform"></div>
-            <div class="player-info">
-                <h4>مكان شاغر</h4>
-                <p class="status-text">في انتظار لاعب...</p>
-            </div>
+        <div class="player-slot empty" id="slot-1">
+            <div class="platform"><img src="" class="player-avatar" style="display:none"></div>
+            <div class="player-info"><h4>مكان شاغر</h4><p class="status-text">في انتظار لاعب...</p></div>
         </div>
-
-        <div class="player-slot empty">
-            <div class="platform"></div>
-            <div class="player-info">
-                <h4>مكان شاغر</h4>
-                <p class="status-text">في انتظار لاعب...</p>
-            </div>
+        <div class="player-slot empty" id="slot-2">
+            <div class="platform"><img src="" class="player-avatar" style="display:none"></div>
+            <div class="player-info"><h4>مكان شاغر</h4><p class="status-text">في انتظار لاعب...</p></div>
         </div>
-
-        <div class="player-slot empty">
-            <div class="platform"></div>
-            <div class="player-info">
-                <h4>مكان شاغر</h4>
-                <p class="status-text">في انتظار لاعب...</p>
-            </div>
+        <div class="player-slot empty" id="slot-3">
+            <div class="platform"><img src="" class="player-avatar" style="display:none"></div>
+            <div class="player-info"><h4>مكان شاغر</h4><p class="status-text">في انتظار لاعب...</p></div>
         </div>
     </div>
 
     <div class="side-menu">
-        <button class="ready-btn" onclick="startSecretTopic()">READY</button>
+        <button class="ready-btn" onclick="triggerReady()">READY</button>
     </div>
 
     <div class="zizo-footer">
-        <p id="zizo-msg">>>> زيزو: "مرحباً بك في النظام.. بانتظار انضمام بقية الفريق من طنطا وباقي المحافظات."</p>
+        <p id="zizo-msg">>>> زيزو: "النظام متصل.. بانتظار دخول الفريق إلى الغرفة."</p>
     </div>
 
-    <script>
-        // جلب بياناتك من المتصفح
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // حط بياناتك هنا من Firebase Realtime Database
+        const firebaseConfig = {
+            apiKey: "*****************",
+            authDomain: "*****************",
+            databaseURL: "*****************",
+            projectId: "*****************",
+            storageBucket: "*****************",
+            messagingSenderId: "*****************",
+            appId: "*****************"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         const userData = JSON.parse(localStorage.getItem('userData')) || {name: "لاعب مجهول"};
         const userAvatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/70";
         const roomCode = localStorage.getItem('activeRoom') || "7777";
-
-        document.getElementById('my-name').innerText = userData.name;
-        document.getElementById('my-img').src = userAvatar;
         document.getElementById('room-code').innerText = roomCode;
 
-        function startSecretTopic() {
-            // تفعيل حالة الجاهزية عندك
-            document.getElementById('my-status').innerText = "● READY";
-            document.getElementById('my-status').classList.add('is-ready');
-            document.getElementById('mission-status').innerText = "تم تأكيد الجاهزية";
-            document.getElementById('mission-status').style.color = "var(--ready-green)";
-            document.getElementById('zizo-msg').innerText = ">>> زيزو: 'تم تسجيل جاهزيتك.. سيتم فتح الملف السري فور اكتمال الفريق.'";
-            
-            // تنبيه: جيت هاب هيفتح الصفحة بس مش هيحفظ حالة "Ready" لصحابك التانيين إلا بـ Firebase
-            setTimeout(() => {
-                alert("جاهز للمهمة! ارفع الملف الثاني (final-secret.html) عشان النقل يشتغل.");
-            }, 1000);
+        const userId = Date.now() + "_" + Math.floor(Math.random() * 1000);
+        const userRef = ref(db, 'rooms/' + roomCode + '/players/' + userId);
+
+        // دخول اللاعب
+        set(userRef, { name: userData.name, avatar: userAvatar, ready: false });
+        onDisconnect(userRef).remove();
+
+        // تحديث الأماكن (Slots) بدون تغيير التصميم
+        onValue(ref(db, 'rooms/' + roomCode + '/players'), (snapshot) => {
+            const data = snapshot.val();
+            // ريست لجميع السلوتس للأصل
+            for(let i=0; i<4; i++) {
+                let slot = document.getElementById(`slot-${i}`);
+                slot.className = "player-slot empty";
+                slot.querySelector('h4').innerText = "مكان شاغر";
+                slot.querySelector('.status-text').innerText = "في انتظار لاعب...";
+                slot.querySelector('.status-text').classList.remove('is-ready');
+                slot.querySelector('img').style.display = "none";
+            }
+
+            if (data) {
+                let index = 0;
+                Object.keys(data).forEach(id => {
+                    if(index < 4) {
+                        const p = data[id];
+                        let slot = document.getElementById(`slot-${index}`);
+                        slot.className = "player-slot";
+                        slot.querySelector('h4').innerText = p.name;
+                        slot.querySelector('.status-text').innerText = p.ready ? "● READY" : "متصل الآن";
+                        if(p.ready) slot.querySelector('.status-text').classList.add('is-ready');
+                        let img = slot.querySelector('img');
+                        img.src = p.avatar;
+                        img.style.display = "block";
+                        index++;
+                    }
+                });
+            }
+        });
+
+        window.triggerReady = function() {
+            set(ref(db, 'rooms/' + roomCode + '/players/' + userId + '/ready'), true);
+            document.getElementById('zizo-msg').innerText = ">>> زيزو: 'تم تأكيد جاهزيتك للمهمة!'";
         }
     </script>
 </body>
