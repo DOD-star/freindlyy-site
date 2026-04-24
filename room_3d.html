@@ -2,179 +2,189 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>حكايات السهرة | الغرفة</title>
+    <title>حكايات السهرة | الغرفة 3D</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap" rel="stylesheet">
     <style>
         body { 
             margin: 0; overflow: hidden; font-family: 'Cairo', sans-serif; 
-            background: #050505 url('bg.jpg') no-repeat center center fixed; background-size: cover;
+            background: #050505 url('bg.jpg') no-repeat center center fixed; 
+            background-size: cover;
         }
-        
         .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
         .ui-layer * { pointer-events: auto; }
-
-        #room-code-bar {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px);
-            padding: 10px 25px; border-radius: 15px; border: 1px solid rgba(255,140,0,0.3);
-            color: white; font-size: 16px; direction: ltr; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        #room-code-bar span { color: #ff8c00; font-weight: bold; font-size: 20px; margin-left: 5px; }
-
-        #status-bar {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 140, 0, 0.2); backdrop-filter: blur(15px);
-            padding: 12px 40px; border-radius: 50px; border: 2px solid #ff8c00;
-            color: #ff8c00; font-weight: bold; font-size: 18px; box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
-        }
-
-        #chat-box {
-            position: absolute; bottom: 20px; right: 20px; width: 350px;
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px);
-            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 15px; display: flex; flex-direction: column;
-        }
-        #messages { 
-            height: 280px; overflow-y: auto; color: white; margin-bottom: 10px; 
-            display: flex; flex-direction: column; padding: 5px; scroll-behavior: smooth;
-        }
-        #messages::-webkit-scrollbar { width: 6px; }
-        #messages::-webkit-scrollbar-thumb { background: #ff8c00; border-radius: 10px; }
-
-        .msg { margin-bottom: 8px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.08); font-size: 14px; }
-        .zizo-text { color: #ff8c00; font-weight: bold; }
-        .user-text { color: #00d2ff; font-weight: bold; }
-
-        #cInput {
-            background: rgba(255, 255, 255, 0.1); border: 2px solid #ff8c00;
-            padding: 12px; color: white; border-radius: 12px; outline: none; width: 90%;
-            font-family: 'Cairo'; align-self: center;
-        }
-
-        #ready-btn {
-            position: absolute; bottom: 30px; left: 30px;
-            padding: 20px 60px; background: linear-gradient(45deg, #ff8c00, #ff5500);
-            border: none; border-radius: 15px; color: white; font-weight: bold;
-            font-size: 22px; cursor: pointer; transition: 0.4s; box-shadow: 0 0 25px rgba(255, 85, 0, 0.4);
-        }
-        #ready-btn.active { background: linear-gradient(45deg, #2ecc71, #27ae60); box-shadow: 0 0 30px rgba(46, 204, 113, 0.6); }
+        #room-code-bar { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); padding: 10px 25px; border-radius: 15px; border: 1px solid #ff8c00; color: white; }
+        #status-bar { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 140, 0, 0.2); backdrop-filter: blur(15px); padding: 12px 40px; border-radius: 50px; border: 2px solid #ff8c00; color: #ff8c00; font-weight: bold; text-align: center; min-width: 300px; }
+        #chat-box { position: absolute; bottom: 20px; right: 20px; width: 350px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 15px; display: flex; flex-direction: column; }
+        #messages { height: 250px; overflow-y: auto; color: white; margin-bottom: 10px; padding: 5px; }
+        .msg { margin-bottom: 8px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.05); font-size: 14px; border-right: 3px solid transparent; }
+        .zizo-msg { border-right-color: #ff8c00; background: rgba(255, 140, 0, 0.1); }
+        .zizo-name { color: #ff8c00; font-weight: bold; }
+        .user-name { color: #00d2ff; font-weight: bold; }
+        #cInput { background: rgba(255, 255, 255, 0.1); border: 2px solid #ff8c00; padding: 12px; color: white; border-radius: 12px; width: 90%; outline: none; }
+        #ready-btn { position: absolute; bottom: 30px; left: 30px; padding: 20px 60px; background: linear-gradient(45deg, #ff8c00, #ff5500); border: none; border-radius: 15px; color: white; font-weight: bold; font-size: 22px; cursor: pointer; transition: 0.3s; }
+        #ready-btn.is-ready { background: #2ecc71; box-shadow: 0 0 30px #2ecc71; }
     </style>
 </head>
 <body>
 
 <div class="ui-layer">
-    <div id="room-code-bar">كود السهرة: <span id="room-code-num">...</span></div>
-    <div id="status-bar">زيزو: "اخلص ياض دوس ريدي عشان نبدأ!"</div>
+    <div id="room-code-bar">كود السهرة: <span id="room-code-num">....</span></div>
+    <div id="status-bar">زيزو: "مستني 2 رجالة يدوسوا Ready عشان نبدأ!"</div>
 
     <div id="chat-box">
-        <div id="messages">
-            <div class="msg"><span class="zizo-text">زيزو:</span> منورين يا شوية فاشلين.. القعدة دي شكلها هتطول بكرة!</div>
-        </div>
-        <input type="text" id="cInput" placeholder="اكتب هنا ودوس Enter..." autocomplete="off">
+        <div id="messages"></div>
+        <input type="text" id="cInput" placeholder="اكتب لزيزو حاجة..." autocomplete="off">
     </div>
 
     <button id="ready-btn" onclick="toggleReady()">READY</button>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore-compat.js"></script>
+
 <script type="module">
     import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
 
-    // كود الغرفة
-    document.getElementById('room-code-num').innerText = "5590";
+    // --- 1. Firebase (تم التحديث ببياناتك الحقيقية) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCTCuuLxHAFhR4WpSXoeCPK-nTH5ne8a1g",
+      authDomain: "hekayat-game.firebaseapp.com",
+      projectId: "hekayat-game",
+      storageBucket: "hekayat-game.firebasestorage.app",
+      messagingSenderId: "609614746441",
+      appId: "1:609614746441:web:6429582465d0d409b44098",
+      measurementId: "G-MEL2R89Z2N"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomCode = urlParams.get('code') || "0000";
+    document.getElementById('room-code-num').innerText = roomCode;
+    const userData = JSON.parse(localStorage.getItem('user_p')) || {name: "لاعب"+Math.floor(Math.random()*100)};
+
+    // --- 2. زيزو وردوده الـ 70 (عينة من الضحك المصري) ---
+    const zizoReplies = [
+        "بتقول إيه يا حليتها؟", "إنت مستحمل فشلك ده إزاي؟", "يا عجل إنت كفاية رغي!", 
+        "خلص ياض السهرة هتبوظ!", "منورين يا شوية بهايم!", "أنا زيزو يا بابا!", 
+        "روح العب بعيد يا شاطر", "إيه القرف اللي بتقوله ده؟", "والله لو قمتلك هعمل منك بطاطس محمرة",
+        "يا ابني إنت ذكائك محدود للدرجة دي؟", "زيزو لا يحييك يا فاشل", "بطل استظراف أحسنلك",
+        "يا ريتك كنت بطيخة كان زماننا استفدنا بيك", "إنت جاي تهزر ولا جاي تخسر؟"
+    ];
+
+    // --- 3. Three.js (الكراسي والأسامي) ---
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
-    function createNameLabel(name) {
+    const playersGroup = new THREE.Group();
+    scene.add(playersGroup);
+
+    // دالة إنشاء كرت اسم (Sprite) فوق الكرسي
+    function createTextLabel(text) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = 512; canvas.height = 128;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, 512, 128);
-        ctx.font = 'Bold 60px Cairo'; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
-        ctx.fillText(name, 256, 85);
+        canvas.width = 256; canvas.height = 128;
+        ctx.fillStyle = '#ff8c00'; ctx.font = 'Bold 40px Cairo'; ctx.textAlign = 'center';
+        ctx.fillText(text, 128, 64);
         const texture = new THREE.CanvasTexture(canvas);
         const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
-        sprite.scale.set(4, 1, 1);
+        sprite.scale.set(2, 1, 1);
         return sprite;
     }
 
-    const radius = 5;
-    for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const x = Math.cos(angle) * radius;
-        const z = Math.sin(angle) * radius;
+    function updateScene(players) {
+        playersGroup.clear();
+        players.forEach((p, i) => {
+            const angle = (i / 8) * Math.PI * 2;
+            const x = Math.cos(angle) * 5;
+            const z = Math.sin(angle) * 5;
+            
+            // الكرسي
+            const chair = new THREE.Mesh(
+                new THREE.BoxGeometry(1.2, 0.5, 1.2),
+                new THREE.MeshStandardMaterial({ color: p.ready ? 0x2ecc71 : 0x111111 })
+            );
+            chair.position.set(x, 0.25, z);
+            chair.lookAt(0, 0.25, 0);
+            playersGroup.add(chair);
 
-        const chair = new THREE.Mesh(
-            new THREE.BoxGeometry(1.2, 0.5, 1.2),
-            new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 })
-        );
-        chair.position.set(x, 0.25, z);
-        chair.lookAt(0, 0.25, 0);
-        scene.add(chair);
-
-        const nameLabel = createNameLabel(i === 0 ? "إياد (الأدمن)" : "لاعب " + (i + 1));
-        nameLabel.position.set(x, 2.2, z);
-        scene.add(nameLabel);
+            // الاسم فوق الكرسي
+            const label = createTextLabel(p.name);
+            label.position.set(x, 1.5, z);
+            playersGroup.add(label);
+        });
     }
 
-    camera.position.set(0, 9, 13);
+    camera.position.set(0, 8, 12);
     camera.lookAt(0, 0, 0);
-
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-    }
+    function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
     animate();
 
-    // --- الشات وزيزو ---
-    const zizoReplies = ["بتقول إيه ياض؟", "يا عجل إنت كفاية رغي!", "إنت مستحمل فشلك ده إزاي؟", "خلص ياض السهرة هتبوظ!", "منورين يا شوية بهايم!", "أنا زيزو يا بابا!", "زيزو بيقولك: اسكت خالص!"];
-    const cInput = document.getElementById('cInput');
-    const messages = document.getElementById('messages');
-    const userData = JSON.parse(localStorage.getItem('user_p')) || {name: 'إياد'};
+    // --- 4. منطق الغرفة (Firebase) ---
+    const roomRef = db.collection("rooms").doc(roomCode);
 
-    function addMsg(user, txt, isZizo) {
-        const div = document.createElement('div');
-        div.className = "msg";
-        div.innerHTML = `<span class="${isZizo ? 'zizo-text' : 'user-text'}">${user}:</span> ${txt}`;
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight; 
-    }
+    // تسجيل الدخول للغرفة
+    roomRef.collection("players").doc(userData.name).set({
+        name: userData.name, ready: false, time: Date.now()
+    });
 
-    cInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            const val = cInput.value.trim();
-            if (val !== "") {
-                addMsg(userData.name, val, false);
-                cInput.value = "";
-                setTimeout(() => {
-                    const reply = zizoReplies[Math.floor(Math.random() * zizoReplies.length)];
-                    addMsg("زيزو", reply, true);
-                }, 600);
-            }
+    // مراقبة اللاعبين والشات
+    roomRef.collection("players").onSnapshot(snap => {
+        let players = [];
+        let readyCount = 0;
+        snap.forEach(doc => {
+            const p = doc.data();
+            players.push(p);
+            if(p.ready) readyCount++;
+        });
+        updateScene(players);
+
+        // شرط الـ 2 Ready
+        if(readyCount >= 2) {
+            document.getElementById('status-bar').innerText = "زيزو: كدة الكلام دخل في الجد.. يلا بينا!";
+            setTimeout(() => window.location.href = `draw_game.html?code=${roomCode}`, 1500);
         }
     });
 
-    // --- منطق الأدمن والبداية ---
+    // إرسال شات ورد زيزو
+    const cInput = document.getElementById('cInput');
+    cInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && cInput.value.trim() !== "") {
+            const text = cInput.value;
+            roomRef.collection("chat").add({ user: userData.name, text, time: Date.now() });
+            cInput.value = "";
+            
+            // رد زيزو
+            setTimeout(() => {
+                const reply = zizoReplies[Math.floor(Math.random() * zizoReplies.length)];
+                roomRef.collection("chat").add({ user: "زيزو", text: reply, isZizo: true, time: Date.now() });
+            }, 600);
+        }
+    });
+
+    roomRef.collection("chat").orderBy("time").limitToLast(15).onSnapshot(snap => {
+        const msgDiv = document.getElementById('messages');
+        msgDiv.innerHTML = "";
+        snap.forEach(doc => {
+            const m = doc.data();
+            const div = document.createElement('div');
+            div.className = `msg ${m.isZizo ? 'zizo-msg' : ''}`;
+            div.innerHTML = `<span class="${m.isZizo ? 'zizo-name' : 'user-name'}">${m.user}:</span> ${m.text}`;
+            msgDiv.appendChild(div);
+        });
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+    });
+
     window.toggleReady = () => {
         const btn = document.getElementById('ready-btn');
-        btn.classList.toggle('active');
-        
-        if (btn.classList.contains('active')) {
-            btn.innerText = "READY ✓";
-            addMsg("زيزو", "الأدمن جاهز.. يلا يا بهايم خلصوا!", true);
-            
-            // بما إنك الأدمن، هيدخلك بعد ثانيتين تشوف الوضع
-            setTimeout(() => {
-                window.location.href = 'draw_game.html'; 
-            }, 1500);
-        } else {
-            btn.innerText = "READY";
-        }
+        const currentState = btn.classList.contains('is-ready');
+        btn.classList.toggle('is-ready');
+        btn.innerText = !currentState ? "READY ✓" : "READY";
+        roomRef.collection("players").doc(userData.name).update({ ready: !currentState });
     };
 </script>
 </body>
