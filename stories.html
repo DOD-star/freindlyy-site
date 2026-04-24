@@ -1,49 +1,149 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>حكايات السهرة | Welcome</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700&family=Reem+Kufi:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مجلس زيزو الغاضب 😡</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #0a0a1a; overflow: hidden; font-family: 'Cairo', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; }
+        :root { --gold: #ff8c00; --dark-bg: #050505; --chat-bg: rgba(20, 20, 20, 0.9); }
         
-        /* الخلفية المتحركة */
-        .bg { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, #1a1a3a 0%, #050505 100%); z-index: -1; }
+        body { 
+            margin: 0; padding: 0; font-family: 'Cairo', sans-serif;
+            background: radial-gradient(circle at center, #1a0a00 0%, #000 100%);
+            height: 100vh; overflow: hidden; color: white;
+            display: flex; flex-direction: column; align-items: center;
+        }
 
-        /* الكلمة اللي بتلف */
-        .welcome-text { font-family: 'Reem Kufi', sans-serif; font-size: 50px; color: #ff8c00; text-shadow: 0 0 20px rgba(255,140,0,0.6); animation: rotateText 4s linear infinite; margin-bottom: 50px; }
-        @keyframes rotateText { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+        .board {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255, 140, 0, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 140, 0, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; z-index: -1;
+        }
 
-        /* شريط التحميل */
-        .loading-container { width: 300px; height: 10px; background: #222; border-radius: 10px; overflow: hidden; border: 1px solid #ff8c00; }
-        .loading-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #ff8c00, #ffd700); transition: 0.1s; }
-        .loading-status { margin-top: 10px; font-size: 14px; color: #aaa; letter-spacing: 2px; }
+        /* الكود اللي فوق عاليمين */
+        .top-right-badge {
+            position: fixed; top: 20px; right: 20px;
+            background: rgba(255, 140, 0, 0.1);
+            border: 1px solid var(--gold);
+            padding: 5px 15px; border-radius: 8px;
+            font-size: 12px; color: var(--gold);
+            box-shadow: 0 0 10px rgba(255, 140, 0, 0.2);
+            z-index: 100;
+        }
+
+        /* قائمة الناس اللي اونلاين */
+        .online-sidebar {
+            position: fixed; right: 20px; top: 80px;
+            width: 150px; background: rgba(255, 140, 0, 0.05);
+            border: 1px solid rgba(255, 140, 0, 0.3);
+            border-radius: 15px; padding: 10px;
+            backdrop-filter: blur(5px);
+        }
+        .online-sidebar h3 { font-size: 14px; margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 5px; color: var(--gold); }
+        .user-list { list-style: none; padding: 0; margin: 0; }
+        .user-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px; }
+        .status-dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
+
+        #chat-container {
+            position: fixed; bottom: 30px; width: 90%; max-width: 500px;
+            background: var(--chat-bg); border: 2px solid var(--gold);
+            border-radius: 20px; padding: 15px; box-shadow: 0 0 30px rgba(255, 140, 0, 0.2);
+        }
+
+        #messages {
+            height: 300px; overflow-y: auto; display: flex; flex-direction: column;
+            gap: 10px; padding-right: 10px; margin-bottom: 15px;
+        }
+
+        .msg { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 15px; line-height: 1.6; }
+        .user-msg { align-self: flex-start; background: #333; color: #fff; border-bottom-left-radius: 2px; }
+        .zizo-msg { align-self: flex-end; background: var(--gold); color: #000; font-weight: bold; border-bottom-right-radius: 2px; box-shadow: 0 4px 10px rgba(255,140,0,0.3); }
+
+        .input-group { display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #444; background: #000; color: white; outline: none; }
+        button { background: var(--gold); border: none; padding: 10px 20px; border-radius: 10px; color: black; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #e67e00; transform: scale(1.05); }
+
+        .zizo-status { position: fixed; top: 20px; text-align: center; }
+        .zizo-status h1 { margin: 0; color: var(--gold); text-shadow: 0 0 10px var(--gold); font-size: 24px; }
+        .zizo-avatar { font-size: 60px; filter: drop-shadow(0 0 10px var(--gold)); }
+
+        /* موبايل ريسبونسيف */
+        @media (max-width: 768px) {
+            .online-sidebar { display: none; } /* بنخفيها في الموبايل عشان الزحمة */
+        }
     </style>
 </head>
 <body>
-    <div class="bg"></div>
-    <div class="welcome-text">مرحبااا بكم</div>
-    
-    <div class="loading-container">
-        <div class="loading-bar" id="bar"></div>
+
+    <div class="board"></div>
+
+    <div class="top-right-badge">
+        <span>V 2.0.4 | SERVER-RUNNING</span>
     </div>
-    <div class="loading-status">جارٍ تحضير السهرة... <span id="percent">0%</span></div>
+
+    <div class="online-sidebar">
+        <h3>المتصلين الآن</h3>
+        <div class="user-list">
+            <div class="user-item"><span class="status-dot"></span> زيزو (Bot)</div>
+            <div class="user-item"><span class="status-dot"></span> أنت</div>
+            <div class="user-item" style="opacity: 0.5;"><span class="status-dot" style="background:gray; box-shadow:none;"></span> مجهول</div>
+        </div>
+    </div>
+
+    <div class="zizo-status">
+        <div class="zizo-avatar">🤖</div>
+        <h1>زيزو موده مش تمام</h1>
+    </div>
+
+    <div id="chat-container">
+        <div id="messages">
+            <div class="msg zizo-msg">زيزو: دخلت ليه يا روح خالتك؟ مش ناقصة عيال طرية النهاردة! 😤</div>
+        </div>
+        <div class="input-group">
+            <input type="text" id="userInput" placeholder="اهبب قول أي حاجة..." onkeypress="handleKey(event)">
+            <button onclick="sendMessage()">إرسال</button>
+        </div>
+    </div>
 
     <script>
-        let p = 0;
-        let bar = document.getElementById('bar');
-        let percent = document.getElementById('percent');
-        
-        let interval = setInterval(() => {
-            p += Math.floor(Math.random() * 5) + 1;
-            if(p > 100) p = 100;
-            bar.style.width = p + "%";
-            percent.innerText = p + "%";
-            if(p >= 100) {
-                clearInterval(interval);
-                setTimeout(() => window.location.href = 'profile.html', 500);
-            }
-        }, 100);
+        const zizoReplies = [
+            "إنت لسه هترغي؟ اخلص!", "بقولك إيه، روح نام أحسن لك بدل ما أهزقك.", "هو إنت موراكش غيري يا بارد؟",
+            "يا واد اتقل كدة بلاش خفة..", "ده كلام تقوله لواحد في هيبتي؟ جاتك نيلة!", "مش فاضي لك، برتب المجلس.",
+            "إنت فاكر نفسك مين ياض؟", "كلمة كمان وهطردك من الأوضة!", "زيزو مبيحبش اللت والعجن الكتير.",
+            "يا مثبت العقل والدين، إيه الذكاء ده؟ (بقلة أدب طبعاً)", "اكتب عدل يا ابني بدل ما أكسر لك الكيبورد ده.",
+            "إنت جيت؟ يا فتاح يا عليم يا رزاق يا كريم..", "بطل كلام وروح هات لنا كوباية شاي.",
+            "أنا زيزو يا حبيبي، يعني الهيبة يعني التقدير، ركز!", "إنت لسه هنا؟ غور ياض من قدامي.",
+            "كلامك زي وشك، ملوش لازمة.", "أنا لو قمت لك مش هيحصل طيب..", "يا عيني على التفاهة اللي إنت فيها.",
+            "بقولك إيه.. فكك مني الساعة دي.", "هو ده اللي فالح فيه؟ رغي وبس؟", "اتلم بدل ما ألمك!"
+        ];
+
+        function handleKey(e) { if(e.key === 'Enter') sendMessage(); }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (text === "") return;
+
+            addMessage("أنت", text, 'user-msg');
+            input.value = "";
+
+            setTimeout(() => {
+                const reply = zizoReplies[Math.floor(Math.random() * zizoReplies.length)];
+                addMessage("زيزو", reply, 'zizo-msg');
+            }, 800);
+        }
+
+        function addMessage(sender, text, className) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${className}`;
+            msgDiv.innerText = `${sender}: ${text}`;
+            const container = document.getElementById('messages');
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
     </script>
 </body>
 </html>
