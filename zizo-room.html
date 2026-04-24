@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غرفة التحكم | زيزو</title>
+    <style>
+        :root {
+            --ps-blue: #0072ce;
+            --neon-cyan: #00f2ff;
+            --ready-green: #2ecc71;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: #02050a;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            /* الخلفية اللي انت هتجيبها */
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('zizo-bg.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--ps-blue);
+        }
+
+        /* منطقة اللاعبين */
+        .players-hub {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 40px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .player-slot {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 50px 15px 15px 50px;
+            border-left: 4px solid var(--neon-cyan);
+            transition: 0.3s;
+        }
+
+        .platform {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-cyan);
+            overflow: hidden;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        .player-avatar { width: 100%; height: 100%; object-fit: cover; }
+
+        .player-info h4 { font-size: 1.1rem; }
+        .status-text { font-size: 0.8rem; color: #aaa; }
+        .is-ready { color: var(--ready-green) !important; font-weight: bold; }
+
+        /* زرار READY على الشمال */
+        .side-menu {
+            position: fixed;
+            left: 30px;
+            bottom: 40px;
+            z-index: 100;
+        }
+
+        .ready-btn {
+            background: var(--ready-green);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .ready-btn:hover {
+            transform: scale(1.1) rotate(-2deg);
+            box-shadow: 0 0 30px var(--ready-green);
+        }
+
+        .ready-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* شاشة أوامر زيزو */
+        .zizo-footer {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="font-weight: bold; letter-spacing: 2px;">NEURAL LINK: <span id="room-code" style="color:var(--neon-cyan)">---</span></div>
+        <div>الموضوع السري: <span style="color:red">قيد التجهيز</span></div>
+    </header>
+
+    <div class="players-hub" id="players-list">
+        <div class="player-slot" id="my-slot">
+            <div class="platform"><img src="" id="my-img" class="player-avatar"></div>
+            <div class="player-info">
+                <h4 id="my-name">تحميل...</h4>
+                <p class="status-text" id="my-status">في انتظارك...</p>
+            </div>
+        </div>
+
+        <div class="player-slot">
+            <div class="platform"><img src="https://i.pravatar.cc/150?u=bot1" class="player-avatar"></div>
+            <div class="player-info">
+                <h4>Siri_Bot</h4>
+                <p class="status-text is-ready">● READY</p>
+            </div>
+        </div>
+        <div class="player-slot">
+            <div class="platform"><img src="https://i.pravatar.cc/150?u=bot2" class="player-avatar"></div>
+            <div class="player-info">
+                <h4>Alex_AI</h4>
+                <p class="status-text is-ready">● READY</p>
+            </div>
+        </div>
+        <div class="player-slot">
+            <div class="platform"><img src="https://i.pravatar.cc/150?u=bot3" class="player-avatar"></div>
+            <div class="player-info">
+                <h4>Zizo_Junior</h4>
+                <p class="status-text is-ready">● READY</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-menu">
+        <button class="ready-btn" onclick="startSecretTopic()">READY</button>
+    </div>
+
+    <div class="zizo-footer">
+        <p id="zizo-msg">>>> زيزو: "باقي لاعب واحد فقط لبدء المهمة السرية..."</p>
+    </div>
+
+    <script>
+        // جلب بياناتك
+        const userData = JSON.parse(localStorage.getItem('userData')) || {name: "لاعب"};
+        const userAvatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/70";
+        const roomCode = localStorage.getItem('activeRoom') || "0000";
+
+        document.getElementById('my-name').innerText = userData.name;
+        document.getElementById('my-img').src = userAvatar;
+        document.getElementById('room-code').innerText = roomCode;
+
+        function startSecretTopic() {
+            // تغيير حالتك لـ Ready
+            document.getElementById('my-status').innerText = "● READY";
+            document.getElementById('my-status').classList.add('is-ready');
+            document.getElementById('zizo-msg').innerText = ">>> زيزو: 'اكتمل الفريق! جاري فتح الملف السري الآن...'";
+            
+            // النقل لآخر صفحة بعد ثانية
+            setTimeout(() => {
+                window.location.href = "final-secret.html";
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
