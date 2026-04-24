@@ -143,40 +143,53 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, onDisconnect, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // حط بياناتك هنا من Firebase Realtime Database
+        // تم وضع الكونفيج الخاص بك هنا
         const firebaseConfig = {
-            apiKey: "*****************",
-            authDomain: "*****************",
-            databaseURL: "*****************",
-            projectId: "*****************",
-            storageBucket: "*****************",
-            messagingSenderId: "*****************",
-            appId: "*****************"
+            apiKey: "AIzaSyDl6YLqSMoP9Jc4RV_m4SFknwntBIsMpG4",
+            authDomain: "zizo-78bba.firebaseapp.com",
+            databaseURL: "https://zizo-78bba-default-rtdb.firebaseio.com",
+            projectId: "zizo-78bba",
+            storageBucket: "zizo-78bba.firebasestorage.app",
+            messagingSenderId: "277529747737",
+            appId: "1:277529747737:web:c16ba066d7c94ca2236588",
+            measurementId: "G-NZ7QL5SX1K"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const userData = JSON.parse(localStorage.getItem('userData')) || {name: "لاعب مجهول"};
-        const userAvatar = localStorage.getItem('userAvatar') || "https://via.placeholder.com/70";
+        // جلب البيانات اللي تسجلت في الـ index
+        const savedData = localStorage.getItem('userData');
+        const userAvatar = localStorage.getItem('userAvatar') || "https://api.dicebear.com/7.x/avataaars/svg?seed=Zizo";
+        
+        let playerName = "لاعب مجهول";
+        if(savedData) {
+            const parsed = JSON.parse(savedData);
+            playerName = parsed.name || "لاعب مجهول";
+        }
+
         const roomCode = localStorage.getItem('activeRoom') || "7777";
         document.getElementById('room-code').innerText = roomCode;
 
-        const userId = Date.now() + "_" + Math.floor(Math.random() * 1000);
-        const userRef = ref(db, 'rooms/' + roomCode + '/players/' + userId);
+        // معرف فريد عشان لو فتحت من كذا جهاز
+        const userId = "user_" + Math.random().toString(36).substr(2, 9);
+        const userRef = ref(db, `rooms/${roomCode}/players/${userId}`);
 
-        // دخول اللاعب
-        set(userRef, { name: userData.name, avatar: userAvatar, ready: false });
+        // إرسال البيانات فوراً للداتابيز
+        set(userRef, {
+            name: playerName,
+            avatar: userAvatar,
+            ready: false
+        });
+
         onDisconnect(userRef).remove();
 
-        // تحديث الأماكن (Slots) بدون تغيير التصميم
-        onValue(ref(db, 'rooms/' + roomCode + '/players'), (snapshot) => {
-            const data = snapshot.val();
-            // ريست لجميع السلوتس للأصل
+        onValue(ref(db, `rooms/${roomCode}/players`), (snapshot) => {
+            const players = snapshot.val();
             for(let i=0; i<4; i++) {
-                let slot = document.getElementById(`slot-${i}`);
+                const slot = document.getElementById(`slot-${i}`);
                 slot.className = "player-slot empty";
                 slot.querySelector('h4').innerText = "مكان شاغر";
                 slot.querySelector('.status-text').innerText = "في انتظار لاعب...";
@@ -184,17 +197,24 @@
                 slot.querySelector('img').style.display = "none";
             }
 
-            if (data) {
+            if (players) {
                 let index = 0;
-                Object.keys(data).forEach(id => {
+                Object.keys(players).forEach(id => {
                     if(index < 4) {
-                        const p = data[id];
-                        let slot = document.getElementById(`slot-${index}`);
+                        const p = players[id];
+                        const slot = document.getElementById(`slot-${index}`);
                         slot.className = "player-slot";
                         slot.querySelector('h4').innerText = p.name;
-                        slot.querySelector('.status-text').innerText = p.ready ? "● READY" : "متصل الآن";
-                        if(p.ready) slot.querySelector('.status-text').classList.add('is-ready');
-                        let img = slot.querySelector('img');
+                        
+                        const statusTag = slot.querySelector('.status-text');
+                        if (p.ready) {
+                            statusTag.innerText = "● READY";
+                            statusTag.classList.add('is-ready');
+                        } else {
+                            statusTag.innerText = "متصل الآن";
+                        }
+
+                        const img = slot.querySelector('img');
                         img.src = p.avatar;
                         img.style.display = "block";
                         index++;
@@ -204,9 +224,9 @@
         });
 
         window.triggerReady = function() {
-            set(ref(db, 'rooms/' + roomCode + '/players/' + userId + '/ready'), true);
+            update(userRef, { ready: true });
             document.getElementById('zizo-msg').innerText = ">>> زيزو: 'تم تأكيد جاهزيتك للمهمة!'";
-        }
+        };
     </script>
 </body>
 </html>
