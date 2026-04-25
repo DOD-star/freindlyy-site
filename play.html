@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Zone - Play Now</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('bg.gif');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            overflow: hidden;
+            color: white;
+        }
+
+        .player-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 210, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 50px 10px 50px 10px;
+            border-left: 4px solid #00d2ff;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            transition: 0.3s;
+            z-index: 100;
+        }
+
+        .player-tag:hover {
+            transform: scale(1.05);
+            background: rgba(0, 210, 255, 0.3);
+        }
+
+        .player-tag img {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 2px solid #00d2ff;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+
+        .player-info h3 { margin: 0; font-size: 11px; color: #00d2ff; letter-spacing: 1px; }
+        .player-info p { margin: 0; font-size: 16px; font-weight: bold; }
+        .edit-hint { font-size: 8px; color: #aaa; display: block; }
+
+        .main-content {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .play-link {
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .play-title {
+            font-size: clamp(60px, 15vw, 130px);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 20px;
+            color: transparent;
+            -webkit-text-stroke: 2px #fff;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .play-link:hover .play-title {
+            color: #fff;
+            text-shadow: 0 0 20px #00d2ff, 0 0 50px #9d50bb;
+            letter-spacing: 30px;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="player-tag">
+        <img id="displayImg" src="https://via.placeholder.com/150" alt="Avatar">
+        <div class="player-info">
+            <h3 id="displayCountry">LOADING...</h3>
+            <p id="displayName">LOADING...</p>
+            <span class="edit-hint">Click to edit ⚙️</span>
+        </div>
+    </a>
+
+    <div class="main-content">
+        <a href="game-screen.html" class="play-link">
+            <h1 class="play-title">PLAY</h1>
+        </a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // الكونفيج بتاعتك (نفس اللي في الصفحة الأولى)
+        const firebaseConfig = {
+          apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
+          authDomain: "game-745d3.firebaseapp.com",
+          databaseURL: "https://game-745d3-default-rtdb.firebaseio.com",
+          projectId: "game-745d3",
+          storageBucket: "game-745d3.firebasestorage.app",
+          messagingSenderId: "907334488624",
+          appId: "1:907334488624:web:efb34e82fa22c1fbb313f5"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        window.onload = function() {
+            // أولاً: بنجيب الاسم اللي متسجل في الجهاز عشان نعرف إحنا بنجيب بيانات مين
+            const savedName = localStorage.getItem('playerName');
+
+            if (savedName) {
+                // ثانياً: بنسحب البيانات "لايف" من فايربيز
+                database.ref('players/' + savedName).on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        document.getElementById('displayName').innerText = data.nickname;
+                        document.getElementById('displayCountry').innerText = data.country;
+                        if (data.avatar) {
+                            document.getElementById('displayImg').src = data.avatar;
+                        }
+                    }
+                });
+            } else {
+                // لو مفيش اسم متسجل يرجعه لصفحة التسجيل
+                window.location.href = "index.html";
+            }
+        }
+    </script>
+</body>
+</html>

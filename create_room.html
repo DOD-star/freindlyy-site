@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Undercover - Mega Lobby</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon: #00d2ff; --spy: #ff0055; --bot: #00ff95; --bg: #050505; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Cairo', sans-serif; background: var(--bg); color: white; overflow: hidden; }
+
+        .bg-animate { position: fixed; inset: 0; background: #050505; z-index: -1; }
+        .bg-dots { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(var(--neon) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.05; animation: moveBg 20s linear infinite; }
+        @keyframes moveBg { from { background-position: 0 0; } to { background-position: 500px 500px; } }
+
+        #lobbyWrapper { display: grid; grid-template-columns: 1fr 350px; height: 100vh; }
+
+        .main-lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 20px; }
+        .players-area { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 800px; }
+
+        .player-slot { 
+            background: rgba(255,255,255,0.02); border: 1px dashed #333;
+            border-radius: 20px; height: 130px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; transition: 0.4s; opacity: 0.2;
+        }
+        .player-slot.active { opacity: 1; border: 2px solid var(--neon); background: rgba(0, 210, 255, 0.05); border-style: solid; }
+        
+        .p-img { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #444; background: #222 center/cover; transition: 0.3s; }
+        .is-ready .p-img { border-color: var(--bot); box-shadow: 0 0 15px var(--bot); }
+        
+        .ready-tag { font-size: 10px; color: var(--bot); margin-top: 5px; font-weight: 900; display: none; background: rgba(0,255,149,0.1); padding: 2px 8px; border-radius: 10px; }
+        .is-ready .ready-tag { display: block; }
+
+        .lobby-chat { background: #0c0c0c; border-right: 1px solid #222; display: flex; flex-direction: column; position: relative; height: 100vh; }
+        .chat-msgs { flex: 1; padding: 15px; overflow-y: scroll; font-size: 14px; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--neon) transparent; }
+        .chat-msgs::-webkit-scrollbar { width: 5px; }
+        .chat-msgs::-webkit-scrollbar-thumb { background: var(--neon); border-radius: 10px; }
+
+        .scroll-arrow { position: absolute; bottom: 85px; right: 20px; width: 35px; height: 35px; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } }
+
+        .chat-in-wrapper { padding: 15px; background: #111; display: flex; align-items: center; gap: 8px; border-top: 1px solid #222; }
+        .chat-in-wrapper input { flex: 1; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 12px; outline: none; }
+        .send-btn-mob { background: var(--neon); border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .send-btn-mob svg { fill: #000; width: 20px; height: 20px; transform: scaleX(-1); }
+
+        .code-banner { position: absolute; top: 20px; text-align: center; }
+        .code-banner h2 { color: var(--neon); margin: 0; letter-spacing: 5px; font-size: 30px; text-shadow: 0 0 15px var(--neon); }
+        
+        .action-bar { margin-top: 30px; display: flex; gap: 15px; }
+        .btn { padding: 12px 30px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 15px; }
+        .btn-ready { background: #222; color: #fff; border: 1px solid #444; }
+        .btn-ready.pushed { background: var(--bot); color: #000; box-shadow: 0 0 15px var(--bot); }
+        .btn-start { background: #111; color: #444; cursor: not-allowed; border: 1px solid #222; }
+        .btn-start.enabled { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); cursor: pointer; }
+
+        @media (max-width: 768px) {
+            #lobbyWrapper { grid-template-columns: 1fr; grid-template-rows: 1fr 300px; }
+            .players-area { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animate"><div class="bg-dots"></div></div>
+
+    <div id="lobbyWrapper">
+        <div class="main-lobby">
+            <div class="code-banner">
+                <h2 id="roomCode">9901</h2>
+                <p style="color: #444; font-size: 11px;">انتظار المحققين...</p>
+            </div>
+
+            <div class="players-area" id="slotsGrid">
+                <div class="player-slot" id="slot-0"> <div class="p-img" id="img-0"></div> <div class="p-name" id="name-0">...</div> <div class="ready-tag">READY</div> </div>
+                <div class="player-slot" id="slot-1"> <div class="p-img" id="img-1"></div> <div class="p-name" id="name-1">...</div> <div class="ready-tag">READY</div> </div>
+                <div class="player-slot" id="slot-2"> <div class="p-img" id="img-2"></div> <div class="p-name" id="name-2">...</div> <div class="ready-tag">READY</div> </div>
+                <div class="player-slot" id="slot-3"> <div class="p-img" id="img-3"></div> <div class="p-name" id="name-3">...</div> <div class="ready-tag">READY</div> </div>
+                <div class="player-slot" id="slot-4"> <div class="p-img" id="img-4"></div> <div class="p-name" id="name-4">...</div> <div class="ready-tag">READY</div> </div>
+                <div class="player-slot" id="slot-5"> <div class="p-img" id="img-5"></div> <div class="p-name" id="name-5">...</div> <div class="ready-tag">READY</div> </div>
+                <div class="player-slot" id="slot-6"> <div class="p-img" id="img-6"></div> <div class="p-name" id="name-6">...</div> <div class="ready-tag">READY</div> </div>
+                <div class="player-slot" id="slot-7"> <div class="p-img" id="img-7"></div> <div class="p-name" id="name-7">...</div> <div class="ready-tag">READY</div> </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-ready" id="readyBtn" onclick="handleReady()">READY</button>
+                <button class="btn btn-start" id="startBtn" onclick="goGame()" disabled>START</button>
+            </div>
+        </div>
+
+        <aside class="lobby-chat">
+            <div style="padding: 15px; border-bottom: 1px solid #222; color: var(--neon); font-weight: 900; font-size: 12px; display: flex; justify-content: space-between;">
+                <span>LOBBY CHAT</span>
+                <span id="onlineCount" style="color: #666;">0/8</span>
+            </div>
+            <div class="chat-msgs" id="chatBox">
+                <div style="color: #444; margin-bottom: 10px;">نظام: أهلاً بك في المحادثة!</div>
+            </div>
+            <div class="scroll-arrow" onclick="scrollToBottom()">
+                <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path></svg>
+            </div>
+            <div class="chat-in-wrapper">
+                <input type="text" id="chatIn" placeholder="اكتب هنا..." onkeypress="if(event.key==='Enter')sendLobbyMsg()">
+                <button class="send-btn-mob" onclick="sendLobbyMsg()">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                </button>
+            </div>
+        </aside>
+    </div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+    // --- إعدادات Firebase ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
+        authDomain: "game-745d3.firebaseapp.com",
+        databaseURL: "https://game-745d3-default-rtdb.firebaseio.com",
+        projectId: "game-745d3",
+        storageBucket: "game-745d3.firebasestorage.app",
+        messagingSenderId: "907334488624",
+        appId: "1:907334488624:web:efb34e82fa22c1fbb313f5",
+        measurementId: "G-NBVGMKTWBM"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- تفعيل كود الروم تلقائياً ---
+    const ROOM_CODE = "9901";
+    localStorage.setItem('activeRoomCode', ROOM_CODE); 
+
+    const myId = "user_" + Math.floor(Math.random() * 1000000);
+    
+    // تصحيح الاسم
+    let myRawName = localStorage.getItem('playerName');
+    let myName = (myRawName && myRawName !== "undefined") ? myRawName : "عميل سرّي";
+    const myImg = localStorage.getItem('savedImg') || "";
+
+    const playerRef = db.ref('players/' + myId);
+    playerRef.set({
+        name: myName,
+        img: myImg,
+        isReady: false,
+        room: ROOM_CODE
+    });
+    playerRef.onDisconnect().remove();
+
+    // مزامنة اللاعبين
+    db.ref('players').on('value', (snapshot) => {
+        const players = snapshot.val() || {};
+        const playerIds = Object.keys(players).filter(id => players[id].room === ROOM_CODE);
+        
+        for(let i=0; i<8; i++) {
+            const slot = document.getElementById(`slot-${i}`);
+            slot.classList.remove('active', 'is-ready');
+            document.getElementById(`name-${i}`).innerText = "...";
+            document.getElementById(`img-${i}`).style.backgroundImage = "";
+        }
+
+        let readyCount = 0;
+        playerIds.forEach((id, index) => {
+            if(index < 8) {
+                const slot = document.getElementById(`slot-${index}`);
+                const data = players[id];
+                slot.classList.add('active');
+                if(data.isReady) {
+                    slot.classList.add('is-ready');
+                    readyCount++;
+                }
+                let displayName = data.name || "لاعب";
+                document.getElementById(`name-${index}`).innerText = (id === myId) ? displayName + " (أنت)" : displayName;
+                if(data.img) document.getElementById(`img-${index}`).style.backgroundImage = `url('${data.img}')`;
+            }
+        });
+
+        document.getElementById('onlineCount').innerText = `${playerIds.length}/8`;
+        checkGameStart(readyCount, playerIds.length);
+    });
+
+    // الشات
+    function sendLobbyMsg() {
+        const input = document.getElementById('chatIn');
+        const msg = input.value.trim();
+        if(msg) {
+            db.ref('chat').push({
+                sender: myName,
+                text: msg,
+                room: ROOM_CODE,
+                timestamp: Date.now()
+            });
+            input.value = "";
+        }
+    }
+
+    db.ref('chat').limitToLast(15).on('child_added', (snapshot) => {
+        const data = snapshot.val();
+        if(data.room === ROOM_CODE) {
+            const box = document.getElementById('chatBox');
+            const isMe = data.sender === myName;
+            box.innerHTML += `<div style="margin-bottom: 8px;"><b style="color:${isMe ? 'var(--neon)' : '#ffcc00'}">${isMe ? 'أنت' : data.sender}:</b> <span style="color:#eee">${data.text}</span></div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+    });
+
+    function handleReady() {
+        const btn = document.getElementById('readyBtn');
+        const currentlyReady = btn.classList.contains('pushed');
+        playerRef.update({ isReady: !currentlyReady });
+        
+        if(!currentlyReady) {
+            btn.innerText = "CANCEL";
+            btn.classList.add('pushed');
+        } else {
+            btn.innerText = "READY";
+            btn.classList.remove('pushed');
+        }
+    }
+
+    function checkGameStart(readyCount, totalPlayers) {
+        const startBtn = document.getElementById('startBtn');
+        if(totalPlayers >= 2 && readyCount === totalPlayers) {
+            startBtn.disabled = false;
+            startBtn.classList.add('enabled');
+        } else {
+            startBtn.disabled = true;
+            startBtn.classList.remove('enabled');
+        }
+    }
+
+    function scrollToBottom() {
+        const box = document.getElementById('chatBox');
+        box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
+    }
+
+    function goGame() {
+        window.location.href = "undercover_game.html";
+    }
+</script>
+</body>
+</html>

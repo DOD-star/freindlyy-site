@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Undercover - Online Elite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root { --neon: #00d2ff; --spy: #ff0055; --bot: #00ff95; --bg: #050505; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Cairo', sans-serif; background: var(--bg); color: white; overflow: hidden; }
+
+        #intro, #voteOverlay, #eliminationPanel, #endScreen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; background: #000; }
+        #voteOverlay, #eliminationPanel, #endScreen { display: none; }
+
+        .num-anim { font-size: 200px; font-weight: 900; color: var(--neon); display: none; text-shadow: 0 0 30px var(--neon); }
+        .active { display: block; animation: burst 0.8s forwards; }
+        @keyframes burst { 0% { transform: scale(0.2); opacity: 0; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
+
+        .categories { display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap; justify-content: center; }
+        .cat-card { width: 130px; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 20px; cursor: pointer; text-align: center; transition: 0.3s; position: relative; }
+        .cat-card:hover { border-color: var(--neon); background: rgba(0, 210, 255, 0.05); }
+        .v-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 8px; min-height: 20px; }
+        .v-icon { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--neon); background: #333 center/cover; }
+
+        #gameMain { display: none; grid-template-columns: 320px 1fr; height: 100vh; }
+        .sidebar { background: #0c0c0c; border-left: 1px solid #222; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; background: #151515; border-bottom: 2px solid var(--neon); display: flex; align-items: center; gap: 12px; }
+        .p-img { width: 55px; height: 55px; border-radius: 50%; border: 3px solid var(--neon); background: #333 center/cover; }
+        .players-list { flex: 1; padding: 15px; overflow-y: auto; }
+        .player-card { background: #181818; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #222; position: relative; display: flex; justify-content: space-between; align-items: center; }
+        .player-card.locked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+        .cd-text { font-size: 11px; color: var(--spy); font-weight: 900; position: absolute; top: 8px; left: 12px; display: none; }
+
+        .chat-area { display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at top right, #0a0a0a, #050505); }
+        #roundTimer { position: absolute; top: 10px; right: 20px; color: var(--bot); font-weight: bold; border: 1px solid var(--bot); padding: 5px 15px; border-radius: 20px; background: rgba(0,0,0,0.8); z-index: 100; }
+        #timerBox { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); font-size: 45px; font-weight: 900; color: var(--spy); display: none; z-index: 10; text-shadow: 0 0 20px var(--spy); }
+        #messages { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-top: 50px; }
+        .msg { padding: 12px; border-radius: 15px; background: #1a1a1a; max-width: 80%; border-right: 4px solid var(--neon); word-wrap: break-word; }
+        .msg.bot { background: rgba(0, 255, 149, 0.05); border-right-color: var(--bot); color: var(--bot); align-self: center; text-align: center; width: 90%; font-size: 13px; }
+        .msg.me { align-self: flex-start; border-right-color: var(--bot); background: #222; }
+
+        .input-box { padding: 25px; background: #000; display: flex; gap: 10px; opacity: 0.2; pointer-events: none; transition: 0.3s; border-top: 1px solid #222; }
+        .input-active { opacity: 1 !important; pointer-events: all !important; }
+        input { flex: 1; padding: 15px; background: #111; color: white; border: 1px solid #333; border-radius: 10px; outline: none; }
+        .send-btn { background: var(--neon); border: none; border-radius: 10px; padding: 0 20px; cursor: pointer; font-size: 20px; }
+
+        .spectator { pointer-events: none !important; opacity: 0.6; }
+        .vote-timer { color: var(--spy); font-size: 24px; font-weight: 900; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="intro"><div id="countDisplay" class="num-anim"></div></div>
+
+    <div id="voteOverlay">
+        <h1 style="color: var(--neon)">صوّت للفئة المفضلة</h1>
+        <div class="categories">
+            <div class="cat-card" onclick="castCatVote('مأكولات')"><h3>🍔</h3>مأكولات<div class="v-container" id="vc-مأكولات"></div></div>
+            <div class="cat-card" onclick="castCatVote('حيوانات')"><h3>🦁</h3>حيوانات<div class="v-container" id="vc-حيوانات"></div></div>
+            <div class="cat-card" onclick="castCatVote('دول')"><h3>🌍</h3>دول<div class="v-container" id="vc-دول"></div></div>
+        </div>
+    </div>
+
+    <div id="eliminationPanel">
+        <div class="vote-timer" id="vTime">20</div>
+        <h1 style="color: var(--spy)">من هو الجاسوس؟</h1>
+        <div class="categories" id="elimList"></div>
+    </div>
+
+    <div id="gameMain">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="p-img" id="myPic"></div>
+                <div><b id="myUser">AGENT</b><div style="font-size:10px; color:#0f9;">● متصل أونلاين</div></div>
+            </div>
+            <div class="players-list" id="pList"></div>
+        </aside>
+        <main class="chat-area">
+            <div id="roundTimer">03:00</div>
+            <div id="timerBox">40</div>
+            <div id="messages"></div>
+            <div class="input-box" id="bottomBar">
+                <input type="text" id="mIn" placeholder="اكتب ردك..." onkeypress="if(event.key==='Enter')sendMsg()">
+                <button class="send-btn" onclick="sendMsg()">📤</button>
+            </div>
+        </main>
+    </div>
+
+    <div id="endScreen">
+        <h1 id="endMsg" style="font-size: 32px; text-align: center; padding: 20px; color: var(--bot);"></h1>
+        <button onclick="location.reload()" style="padding:15px 40px; background:var(--neon); border:none; border-radius:10px; cursor:pointer; font-weight:900;">العودة للقائمة</button>
+    </div>
+
+<script>
+    // 1. Firebase Config (استخدم بياناتك الحقيقية هنا)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
+        authDomain: "game-745d3.firebaseapp.com",
+        databaseURL: "https://game-745d3-default-rtdb.firebaseio.com",
+        projectId: "game-745d3",
+        storageBucket: "game-745d3.firebasestorage.app",
+        messagingSenderId: "907334488624",
+        appId: "1:907334488624:web:efb34e82fa22c1fbb313f5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // متغيرات اللعبة
+    const gameWords = { "مأكولات": ["بيتزا", "شاورما", "كوشري"], "حيوانات": ["أسد", "فيل", "زرافة"], "دول": ["مصر", "السعودية", "اليابان"] };
+    let myName = localStorage.getItem('playerName') || "لاعب_" + Math.floor(Math.random()*1000);
+    let myPic = localStorage.getItem('savedImg') || "";
+    let roomCode = localStorage.getItem('activeRoomCode') || "9901";
+    let isSpy = false;
+    let amIOut = false;
+    let playersData = {};
+
+    const roomRef = db.ref(`undercover/${roomCode}`);
+
+    // 2. البداية (الأنيميشن)
+    function runIntro() {
+        let count = 3;
+        const d = document.getElementById('countDisplay');
+        const interval = setInterval(() => {
+            if(count > 0) {
+                d.innerText = count;
+                d.classList.remove('active'); void d.offsetWidth; d.classList.add('active');
+                count--;
+            } else {
+                clearInterval(interval);
+                document.getElementById('intro').style.display='none';
+                document.getElementById('voteOverlay').style.display='flex';
+                enterRoom();
+            }
+        }, 1000);
+    }
+
+    // 3. دخول الغرفة أونلاين
+    function enterRoom() {
+        const pRef = roomRef.child('players').child(myName);
+        pRef.set({ name: myName, img: myPic, vote: "", isSpy: false, isOut: false });
+        pRef.onDisconnect().remove();
+
+        // تحديث القائمة والشات والتايمر باستمرار
+        roomRef.child('players').on('value', snap => {
+            playersData = snap.val() || {};
+            updateUI();
+        });
+
+        roomRef.child('categoryVotes').on('value', snap => {
+            const votes = snap.val() || {};
+            updateCategoryVotes(votes);
+        });
+
+        roomRef.child('chat').limitToLast(20).on('child_added', snap => {
+            const msg = snap.val();
+            addLog(msg.user === myName ? `<b>أنت:</b> ${msg.text}` : `<b>${msg.user}:</b> ${msg.text}`, msg.user === myName ? "me" : "");
+        });
+
+        roomRef.child('gameState').on('value', snap => {
+            const state = snap.val();
+            if(state === 'playing') showGameArea();
+            if(state === 'voting') openElimination();
+        });
+
+        roomRef.child('currentWord').on('value', snap => {
+            if(snap.val()) {
+                isSpy = playersData[myName]?.isSpy;
+                const word = isSpy ? "؟؟ أنت الجاسوس ؟؟" : snap.val();
+                addLog(`هويتك هي: [ ${word} ]`, "bot");
+            }
+        });
+    }
+
+    // 4. تصويت الفئات
+    function castCatVote(cat) {
+        roomRef.child('categoryVotes').child(myName).set(cat);
+    }
+
+    function updateCategoryVotes(votes) {
+        document.querySelectorAll('.v-container').forEach(c => c.innerHTML = "");
+        Object.entries(votes).forEach(([user, cat]) => {
+            const userImg = playersData[user]?.img || "";
+            const container = document.getElementById(`vc-${cat}`);
+            if(container) container.innerHTML += `<div class="v-icon" style="background-image:url('${userImg}')"></div>`;
+        });
+    }
+
+    // 5. بدء الجيم (يتم استدعاؤه تلقائياً عند اكتمال التصويت أو بواسطة الهوست)
+    function showGameArea() {
+        document.getElementById('voteOverlay').style.display='none';
+        document.getElementById('gameMain').style.display = 'grid';
+        document.getElementById('myUser').innerText = myName;
+        if(myPic) document.getElementById('myPic').style.backgroundImage = `url('${myPic}')`;
+        startTimerManger();
+    }
+
+    function updateUI() {
+        const list = document.getElementById('pList');
+        list.innerHTML = "";
+        Object.values(playersData).forEach(p => {
+            if(!p.isOut) {
+                list.innerHTML += `
+                    <div class="player-card" id="card-${p.name}">
+                        <span>${p.name}</span>
+                        <button onclick="requestDuel('${p.name}')" style="background:var(--neon); border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-weight:bold;">استجواب</button>
+                    </div>`;
+            }
+        });
+    }
+
+    // 6. نظام الاستجواب والشات
+    function requestDuel(target) {
+        if(amIOut) return;
+        roomRef.child('duel').set({ target: target, startTime: Date.now() });
+        roomRef.child('chat').push({ user: "النظام", text: `🚨 استجواب عاجل لـ [ ${target} ] يبدأ الآن!` });
+    }
+
+    roomRef.child('duel').on('value', snap => {
+        const duel = snap.val();
+        if(duel) {
+            document.getElementById('bottomBar').classList.add('input-active');
+            document.getElementById('timerBox').style.display = 'block';
+            // تايمر الاستجواب (بسيط للعرض)
+            let t = 40;
+            const timer = setInterval(() => {
+                t--; document.getElementById('timerBox').innerText = t;
+                if(t <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('timerBox').style.display = 'none';
+                    document.getElementById('bottomBar').classList.remove('input-active');
+                }
+            }, 1000);
+        }
+    });
+
+    function sendMsg() {
+        const inp = document.getElementById('mIn');
+        if(inp.value.trim() && !amIOut) {
+            roomRef.child('chat').push({ user: myName, text: inp.value });
+            inp.value = "";
+        }
+    }
+
+    function addLog(t, type) {
+        const m = document.getElementById('messages');
+        m.innerHTML += `<div class="msg ${type}">${t}</div>`;
+        m.scrollTop = m.scrollHeight;
+    }
+
+    // 7. التصويت النهائي (Elimination)
+    function openElimination() {
+        const panel = document.getElementById('eliminationPanel');
+        panel.style.display = 'flex';
+        const list = document.getElementById('elimList');
+        list.innerHTML = "";
+        
+        Object.values(playersData).forEach(p => {
+            if(!p.isOut) {
+                list.innerHTML += `<div class="cat-card" onclick="castElimVote('${p.name}')"><h3>👤</h3>${p.name}<div class="v-container" id="ev-${p.name}"></div></div>`;
+            }
+        });
+    }
+
+    function castElimVote(target) {
+        roomRef.child('elimVotes').child(myName).set(target);
+        // هنا المنطق البرمجي بيحسب النتيجة ويطلع الشخص
+    }
+
+    window.onload = runIntro;
+</script>
+</body>
+</html>

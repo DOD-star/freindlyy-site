@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Truth or Dare - Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root { --neon: #00d2ff; --spy: #9d50bb; --bot: #00ff95; --bg: #0b0e1a; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Cairo', sans-serif; background: var(--bg); color: white; overflow: hidden; }
+        #gameLayout { display: grid; grid-template-columns: 280px 1fr 320px; height: 100vh; }
+
+        .room-header {
+            position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.6);
+            padding: 10px 20px; border-radius: 15px; border: 1px solid var(--spy);
+            display: flex; align-items: center; gap: 10px; z-index: 1000; backdrop-filter: blur(10px);
+        }
+
+        .players-side { background: rgba(22, 27, 42, 0.95); border-left: 1px solid #2d3446; padding: 20px; padding-top: 80px; overflow-y: auto; }
+        .user-info { text-align: center; padding: 15px; border-radius: 20px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--spy); margin-bottom: 20px; }
+        .user-info img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; background: #222; }
+
+        .player-item { padding: 12px; border-radius: 12px; background: #1a1a2e; margin-bottom: 10px; border: 1px solid #2d3446; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+        .player-item img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--bot); background: #222; }
+
+        .game-main { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; background: radial-gradient(circle at center, #1a1a2e 0%, #0b0e1a 100%); }
+        .challenge-card { width: 100%; max-width: 500px; min-height: 320px; background: #161b2a; border: 2px solid #2d3446; border-radius: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .card-label { position: absolute; top: -15px; background: #fff; color: #000; padding: 5px 25px; border-radius: 20px; font-weight: 900; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-transform: uppercase; }
+        
+        .spin-button { background: linear-gradient(90deg, #00d2ff, #9d50bb); color: white; border: none; padding: 15px 60px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 35px; box-shadow: 0 5px 20px rgba(157, 80, 187, 0.4); transition: 0.3s; }
+        .spin-button:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(157, 80, 187, 0.6); }
+        .spin-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .chat-side { background: #0b0e1a; border-right: 1px solid #2d3446; display: flex; flex-direction: column; }
+        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .chat-msg { background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4; }
+        .chat-msg b { color: var(--neon); }
+        .chat-input-row { padding: 15px; background: #161b2a; display: flex; gap: 10px; border-top: 1px solid #2d3446; }
+        .chat-input-row input { flex: 1; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; outline: none; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--spy); border-radius: 10px; }
+
+        /* الألوان للحالات */
+        .challenge-card.truth { border-color: var(--neon); }
+        .challenge-card.dare { border-color: var(--spy); }
+    </style>
+</head>
+<body>
+
+<div class="room-header">
+    <div style="font-size: 12px;">كود الغرفة:</div>
+    <div style="color: var(--bot); font-weight: 900; font-size: 20px;" id="roomIdText">#9901</div>
+</div>
+
+<div id="gameLayout">
+    <aside class="players-side">
+        <div class="user-info">
+            <img src="" id="myAvatar">
+            <div id="myNameDisp" style="font-weight: 900; color: var(--neon); margin-top: 5px;"></div>
+        </div>
+        <div style="font-size: 11px; color: #555; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #222; padding-bottom: 5px;">اللاعبين المتصلين</div>
+        <div id="lobbyList"></div>
+    </aside>
+
+    <main class="game-main">
+        <div class="challenge-card" id="mainCard">
+            <div class="card-label" id="cardLabel" style="display:none"></div>
+            <div id="questionText" style="font-size: 22px; font-weight: 700;">في انتظار بدأ التحدي.. 🎲</div>
+            <div id="senderName" style="font-size: 12px; color: #666; margin-top: 15px;"></div>
+        </div>
+        <button class="spin-button" id="spinBtn" onclick="sendChallenge()">ارسل تحدي للكل 🎲</button>
+    </main>
+
+    <aside class="chat-side">
+        <div style="padding:15px; border-bottom: 1px solid #2d3446; color: var(--spy); font-weight: bold; letter-spacing: 1px;">LIVE CHAT</div>
+        <div class="chat-area" id="chatBox"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter')sendMsg()">
+        </div>
+    </aside>
+</div>
+
+<script>
+    // 1. ربط الفايربيز بمشروعك (game-745d3)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
+        authDomain: "game-745d3.firebaseapp.com",
+        databaseURL: "https://game-745d3-default-rtdb.firebaseio.com",
+        projectId: "game-745d3",
+        storageBucket: "game-745d3.firebasestorage.app",
+        messagingSenderId: "907334488624",
+        appId: "1:907334488624:web:efb34e82fa22c1fbb313f5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. سحب بياناتك
+    const myName = localStorage.getItem('playerName') || "محقق_" + Math.floor(Math.random()*100);
+    const myImg = localStorage.getItem('savedImg') || "";
+    const roomCode = localStorage.getItem('activeRoomCode') || "9901";
+
+    document.getElementById('roomIdText').innerText = "#" + roomCode;
+    document.getElementById('myNameDisp').innerText = myName;
+    if(myImg) document.getElementById('myAvatar').src = myImg;
+
+    const roomRef = db.ref('truthRooms/' + roomCode);
+    const myPlayerRef = roomRef.child('players').push(); // استخدام Push عشان نتجنب مسح أسماء متشابهة
+
+    // 3. التواجد أونلاين (Online Presence)
+    myPlayerRef.set({ name: myName, img: myImg });
+    myPlayerRef.onDisconnect().remove(); // يمسحك من القائمة لو قفلت النت
+
+    // 4. تحديث قائمة اللاعبين
+    roomRef.child('players').on('value', (snapshot) => {
+        const list = document.getElementById('lobbyList');
+        list.innerHTML = "";
+        snapshot.forEach((child) => {
+            const p = child.val();
+            list.innerHTML += `
+                <div class="player-item">
+                    <img src="${p.img || 'https://via.placeholder.com/35'}">
+                    <span>${p.name}</span>
+                </div>`;
+        });
+    });
+
+    // 5. إرسال التحدي (يظهر عند الكل)
+    const questions = [
+        {t: "مين أكتر حد بتثق فيه هنا؟", type: "truth"},
+        {t: "قول سر محدش يعرفه عنك", type: "truth"},
+        {t: "لو معاك مليون جنيه هتعمل بيهم ايه؟", type: "truth"},
+        {t: "غير صورتك لصورة مضحكة لمدة 10 دقايق", type: "dare"},
+        {t: "ابعت رسالة عشوائية لأي حد عندك", type: "dare"},
+        {t: "غني مقطع من أغنية حزينة بصوت عالي", type: "dare"}
+    ];
+
+    function sendChallenge() {
+        const randomQ = questions[Math.floor(Math.random() * questions.length)];
+        roomRef.child('currentAction').set({
+            q: randomQ.t,
+            type: randomQ.type,
+            sender: myName,
+            time: Date.now()
+        });
+    }
+
+    // استقبال التحدي
+    roomRef.child('currentAction').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+            const card = document.getElementById('mainCard');
+            const label = document.getElementById('cardLabel');
+            
+            card.classList.remove('truth', 'dare');
+            card.classList.add(data.type);
+            
+            label.innerText = data.type === 'truth' ? "صراحة" : "جرأة";
+            label.style.display = "block";
+            label.style.background = data.type === 'truth' ? "var(--neon)" : "var(--spy)";
+            
+            document.getElementById('questionText').innerText = data.q;
+            document.getElementById('senderName').innerText = "بواسطة: " + data.sender;
+            
+            startTimer();
+        }
+    });
+
+    function startTimer() {
+        const btn = document.getElementById('spinBtn');
+        let count = 10; // خليتها 10 ثواني للتجربة السريعة
+        btn.disabled = true;
+        const t = setInterval(() => {
+            count--;
+            btn.innerText = `انتظر (${count}ث)`;
+            if(count <= 0) {
+                clearInterval(t);
+                btn.disabled = false;
+                btn.innerText = "ارسل تحدي للكل 🎲";
+            }
+        }, 1000);
+    }
+
+    // 6. الشات الأونلاين
+    function sendMsg() {
+        const input = document.getElementById('chatInput');
+        if(input.value.trim()) {
+            roomRef.child('messages').push({ user: myName, text: input.value });
+            input.value = "";
+        }
+    }
+
+    roomRef.child('messages').limitToLast(20).on('child_added', (snapshot) => {
+        const m = snapshot.val();
+        const box = document.getElementById('chatBox');
+        box.innerHTML += `<div class="chat-msg"><b>${m.user}:</b> ${m.text}</div>`;
+        box.scrollTop = box.scrollHeight;
+    });
+
+</script>
+</body>
+</html>

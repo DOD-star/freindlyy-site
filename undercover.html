@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Undercover - Lobby Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root { --ps-blue: #0072ce; --spy-red: #ff3c3c; --glass: rgba(255, 255, 255, 0.1); }
+        
+        body {
+            margin: 0; font-family: 'Cairo', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://i.pinimg.com/originals/f4/1b/30/f41b3074618e478546ad2a392e2f38a5.gif');
+            background-size: cover; background-position: center; color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .zizo-hint {
+            background: white; color: black; padding: 10px 20px; border-radius: 20px;
+            margin-bottom: 30px; position: relative; font-weight: bold;
+            animation: float 3s infinite ease-in-out; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        @keyframes float { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-10px);} }
+
+        .zizo-hint::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%;
+            border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-top: 10px solid white; transform: translateX(-50%);
+        }
+
+        .room-container {
+            display: flex; gap: 40px; justify-content: center; align-items: center; flex-wrap: wrap;
+        }
+
+        .room-card {
+            background: var(--glass); backdrop-filter: blur(15px);
+            border: 2px solid rgba(255,255,255,0.1); border-radius: 30px;
+            width: 250px; padding: 30px; text-align: center;
+            cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none; color: white; outline: none;
+        }
+
+        .room-card:hover {
+            transform: scale(1.05) translateY(-10px);
+            border-color: var(--ps-blue);
+            box-shadow: 0 0 30px rgba(0, 114, 206, 0.4);
+        }
+
+        .room-icon {
+            width: 100px; height: 100px; margin-bottom: 20px;
+            object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+        }
+
+        .room-card h2 { margin: 10px 0; font-size: 24px; font-weight: 900; }
+        .room-card p { font-size: 14px; color: #ccc; }
+
+        .back-btn {
+            position: absolute; bottom: 40px; color: #777; text-decoration: none;
+            font-size: 12px; border: 1px solid #444; padding: 8px 20px; border-radius: 50px;
+            transition: 0.3s;
+        }
+        .back-btn:hover { background: #444; color: white; }
+
+        /* لودنج بسيط */
+        #loading { display: none; color: var(--bot); margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="zizo-hint" id="zizoText">
+        😎 زيزو بيقولك: "اختار غرفتك يا وحش وجهز نفسك للهبد!"
+    </div>
+
+    <div class="room-container">
+        <div onclick="createNewRoom()" class="room-card">
+            <img src="https://cdn-icons-png.flaticon.com/512/3658/3658756.png" class="room-icon" alt="Create">
+            <h2>Create Room</h2>
+            <p>كون شلتك وابدأ التوزيع</p>
+        </div>
+
+        <div onclick="goToJoin()" class="room-card" style="border-color: var(--spy-red);">
+            <img src="https://cdn-icons-png.flaticon.com/512/2583/2583151.png" class="room-icon" alt="Join">
+            <h2>Join Room</h2>
+            <p>ادخل كود الغرفة والعب</p>
+        </div>
+    </div>
+
+    <div id="loading">جاري إنشاء الغرفة... 🔥</div>
+
+    <a href="index.html" class="back-btn">العودة للمكتبة الرئيسية</a>
+
+    <script>
+        // 1. إعدادات Firebase (نفس المشروع بتاعك)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
+            authDomain: "game-745d3.firebaseapp.com",
+            databaseURL: "https://game-745d3-default-rtdb.firebaseio.com",
+            projectId: "game-745d3",
+            storageBucket: "game-745d3.firebasestorage.app",
+            messagingSenderId: "907334488624",
+            appId: "1:907334488624:web:efb34e82fa22c1fbb313f5"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 2. إنشاء غرفة جديدة (Create)
+        function createNewRoom() {
+            document.getElementById('loading').style.display = 'block';
+            
+            // توليد كود عشوائي من 4 أرقام
+            const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+            
+            // حفظ الكود في المتصفح عشان الصفحات الجاية تعرفه
+            localStorage.setItem('activeRoomCode', newCode);
+
+            // إنشاء الداتا الأساسية للروم في فايربيز
+            db.ref('undercover/' + newCode).set({
+                createdAt: Date.now(),
+                status: 'waiting',
+                playersCount: 0
+            }).then(() => {
+                // التوجه لصفحة اللعب (أو صفحة الانتظار لو عندك واحدة)
+                window.location.href = "gameMain.html"; // غير الاسم لاسم صفحة اللعبة عندك
+            });
+        }
+
+        // 3. التوجه لصفحة الانضمام
+        function goToJoin() {
+            window.location.href = "join_room.html"; 
+        }
+
+        // 4. زيزو البوت (نصوص متغيرة)
+        const zizoPhrases = [
+            "😎 زيزو بيقولك: اختار غرفتك يا وحش!",
+            "🕵️‍♂️ شاكك في حد؟ زيزو هيفضحهولك!",
+            "🚀 جاهز تطير الجاسوس؟ ابدأ دلوقتي",
+            "🔥 القعدة ولعت.. مين الكداب النهاردة؟",
+            "🤫 نصيحة زيزو: اكدب بثقة عشان محدش يشك!"
+        ];
+
+        setInterval(() => {
+            const rand = Math.floor(Math.random() * zizoPhrases.length);
+            document.getElementById('zizoText').innerText = zizoPhrases[rand];
+        }, 4000);
+    </script>
+</body>
+</html>

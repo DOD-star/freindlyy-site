@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS5 Home - Game Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ps-blue: #0072ce;
+            --ps-white: #f5f5f5;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('bg_animated.gif');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Cairo', sans-serif;
+            color: var(--ps-white);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .ps5-profile {
+            position: absolute;
+            top: 30px;
+            left: 40px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 50px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: 0.3s;
+            z-index: 1000;
+        }
+
+        .ps5-profile:hover {
+            background: var(--ps-blue);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--ps-blue);
+        }
+
+        .ps5-profile img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid white;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+
+        .profile-name { font-weight: 700; font-size: 16px; margin-left: 10px;}
+
+        .game-grid {
+            display: flex;
+            align-items: center;
+            padding: 0 50px;
+            height: 100vh;
+            gap: 25px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .game-item {
+            flex: 0 0 220px;
+            text-align: center;
+            transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            text-decoration: none;
+            color: white;
+        }
+
+        .game-thumb {
+            width: 100%;
+            height: 220px;
+            border-radius: 20px;
+            background: #222;
+            object-fit: cover;
+            border: 4px solid transparent;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: 0.4s;
+        }
+
+        .game-item h3 {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            opacity: 0.6;
+            transition: 0.3s;
+        }
+
+        .game-item:hover {
+            transform: scale(1.2) translateY(-20px);
+        }
+
+        .game-item:hover .game-thumb {
+            border-color: var(--ps-white);
+            box-shadow: 0 0 40px rgba(255,255,255,0.3);
+        }
+
+        .game-item:hover h3 {
+            opacity: 1;
+            text-shadow: 0 0 10px white;
+        }
+
+        .stars { font-size: 12px; color: #ffcc00; margin-top: 5px; opacity: 0; transition: 0.3s; }
+        .game-item:hover .stars { opacity: 1; }
+
+        .bottom-line {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--ps-blue), transparent);
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="ps5-profile" title="تعديل الحساب">
+        <img id="navImg" src="https://via.placeholder.com/150" alt="">
+        <span class="profile-name" id="navName">LOADING...</span>
+    </a>
+
+    <div class="game-grid">
+        <a href="undercover.html" class="game-item">
+            <img src="game1.jpg" class="game-thumb" alt="Who is the spy">
+            <h3>مين الجاسوس؟</h3>
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+        </a>
+
+        <a href="quiz.html" class="game-item">
+            <img src="game2.jpg" class="game-thumb" alt="Truth or Dare">
+            <h3>صراحه او جراة</h3>
+            <div class="stars">⭐⭐⭐⭐</div>
+        </a>
+
+        <a href="speed.html" class="game-item">
+            <img src="game3.jpg" class="game-thumb" alt="Guess the Movie">
+            <h3>خمن الفيلم</h3>
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+        </a>
+
+        <a href="#" class="game-item">
+            <img src="game4.jpg" class="game-thumb" alt="The Back Story">
+            <h3>اصنع قصتك</h3>
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+        </a>
+
+        <a href="#" class="game-item">
+            <img src="game5.jpg" class="game-thumb" alt="In Your Shoes"> 
+            <h3>لو كنت مكانك</h3>
+            <div class="stars">⭐⭐⭐⭐⭐</div>
+        </a>
+    </div>
+
+    <div class="bottom-line"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // الكونفيج بتاعتك (ثابتة في كل الصفحات)
+        const firebaseConfig = {
+          apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
+          authDomain: "game-745d3.firebaseapp.com",
+          databaseURL: "https://game-745d3-default-rtdb.firebaseio.com",
+          projectId: "game-745d3",
+          storageBucket: "game-745d3.firebasestorage.app",
+          messagingSenderId: "907334488624",
+          appId: "1:907334488624:web:efb34e82fa22c1fbb313f5"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        window.onload = function() {
+            const savedName = localStorage.getItem('playerName');
+
+            if (savedName) {
+                // سحب البيانات لايف من السيرفر
+                database.ref('players/' + savedName).on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        document.getElementById('navName').innerText = data.nickname;
+                        if (data.avatar) {
+                            document.getElementById('navImg').src = data.avatar;
+                        }
+                    }
+                });
+            } else {
+                // لو مفيش اسم، بنعرض بيانات مؤقتة من الـ Local Storage
+                document.getElementById('navName').innerText = localStorage.getItem('playerName') || "GAMER";
+                document.getElementById('navImg').src = localStorage.getItem('savedImg') || "https://via.placeholder.com/150";
+            }
+        }
+    </script>
+</body>
+</html>
