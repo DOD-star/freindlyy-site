@@ -3,70 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Undercover - Mega Lobby (Host System)</title>
+    <title>Undercover - Admin Lobby</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00d2ff; --spy: #ff0055; --bot: #00ff95; --bg: #050505; }
+        :root { --neon: #00d2ff; --spy: #ff0055; --bot: #00ff95; --bg: #050505; --gold: #f1c40f; }
         body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Cairo', sans-serif; background: var(--bg); color: white; overflow: hidden; }
 
-        /* أنيميشن الخلفية */
         .bg-animate { position: fixed; inset: 0; background: #050505; z-index: -1; }
         .bg-dots { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(var(--neon) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.05; animation: moveBg 20s linear infinite; }
         @keyframes moveBg { from { background-position: 0 0; } to { background-position: 500px 500px; } }
 
         #lobbyWrapper { display: grid; grid-template-columns: 1fr 350px; height: 100vh; }
-
-        .main-lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 20px; }
+        .main-lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
         .players-area { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; max-width: 800px; }
 
         .player-slot { 
             background: rgba(255,255,255,0.02); border: 1px dashed #333;
-            border-radius: 20px; height: 150px; display: flex; flex-direction: column;
+            border-radius: 20px; height: 140px; display: flex; flex-direction: column;
             align-items: center; justify-content: center; transition: 0.4s; opacity: 0.2;
             position: relative;
         }
         .player-slot.active { opacity: 1; border: 2px solid var(--neon); background: rgba(0, 210, 255, 0.05); border-style: solid; }
         
-        /* علامة الهوست */
         .host-badge {
-            position: absolute; top: -10px; background: var(--neon); color: #000;
+            position: absolute; top: -10px; background: var(--gold); color: #000;
             padding: 2px 12px; border-radius: 5px; font-size: 10px; font-weight: 900;
-            display: none; box-shadow: 0 0 10px var(--neon); z-index: 5;
+            display: none; box-shadow: 0 0 15px var(--gold);
         }
 
-        .p-img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #444; background: #222 center/cover; transition: 0.3s; }
+        .p-img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #444; background: #222 center/cover; }
         .is-ready .p-img { border-color: var(--bot); box-shadow: 0 0 15px var(--bot); }
-        
-        .ready-tag { font-size: 10px; color: var(--bot); margin-top: 8px; font-weight: 900; display: none; background: rgba(0,255,149,0.1); padding: 2px 8px; border-radius: 10px; }
+        .ready-tag { font-size: 10px; color: var(--bot); margin-top: 5px; font-weight: 900; display: none; }
         .is-ready .ready-tag { display: block; }
 
-        /* الشات */
-        .lobby-chat { background: #0c0c0c; border-right: 1px solid #222; display: flex; flex-direction: column; position: relative; }
-        .chat-msgs { flex: 1; padding: 15px; overflow-y: auto; font-size: 14px; }
-        .chat-in-wrapper { padding: 15px; background: #111; display: flex; gap: 8px; }
-        .chat-in-wrapper input { flex: 1; background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 10px; outline: none; }
-
-        /* الكود العلوي */
-        .code-banner { position: absolute; top: 30px; text-align: center; }
-        .code-banner h2 { color: var(--neon); margin: 0; letter-spacing: 5px; font-size: 35px; text-shadow: 0 0 15px var(--neon); }
+        /* منطقة الكود والأدمن */
+        .admin-panel { position: absolute; top: 25px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .code-row { display: flex; align-items: center; gap: 15px; }
+        .room-code { color: var(--neon); font-size: 40px; font-weight: 900; letter-spacing: 5px; text-shadow: 0 0 15px var(--neon); margin: 0; }
         
-        /* الأزرار */
-        .action-bar { margin-top: 40px; display: flex; gap: 20px; }
+        .admin-btn { width: 35px; height: 35px; cursor: pointer; fill: #333; transition: 0.3s; }
+        .admin-btn:hover { fill: var(--spy); }
+        .host-claim-btn { width: 35px; height: 35px; cursor: pointer; fill: #333; transition: 0.3s; }
+        .host-claim-btn.active-host { fill: var(--gold); filter: drop-shadow(0 0 5px var(--gold)); }
+
+        .action-bar { margin-top: 40px; display: flex; gap: 15px; }
         .btn { padding: 15px 40px; border-radius: 15px; border: none; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 16px; }
         .btn-ready { background: #222; color: #fff; border: 1px solid #444; }
-        .btn-ready.pushed { background: var(--bot); color: #000; box-shadow: 0 0 15px var(--bot); }
-        
-        .btn-start { 
-            background: #111; color: #444; display: none; /* مخفي لغير الهوست */
-            border: 1px solid #222; text-transform: uppercase;
-        } 
-        .btn-start.enabled { background: var(--neon); color: #000; box-shadow: 0 0 25px var(--neon); cursor: pointer; display: block; }
+        .btn-ready.pushed { background: var(--bot); color: #000; }
+        #startBtn { background: var(--neon); color: #000; display: none; box-shadow: 0 0 20px var(--neon); }
+        #startBtn:disabled { background: #111; color: #444; box-shadow: none; }
 
-        @media (max-width: 768px) {
-            #lobbyWrapper { grid-template-columns: 1fr; }
-            .players-area { grid-template-columns: repeat(2, 1fr); }
-            .lobby-chat { height: 300px; }
-        }
+        .lobby-chat { background: #0c0c0c; border-right: 1px solid #222; display: flex; flex-direction: column; }
+        .chat-msgs { flex: 1; padding: 15px; overflow-y: auto; font-size: 14px; }
+        .chat-in-wrapper { padding: 15px; background: #111; display: flex; gap: 5px; }
+        .chat-in-wrapper input { flex: 1; background: #000; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 10px; outline: none; }
+
+        @media (max-width: 768px) { #lobbyWrapper { grid-template-columns: 1fr; } .players-area { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
@@ -75,9 +67,20 @@
 
     <div id="lobbyWrapper">
         <div class="main-lobby">
-            <div class="code-banner">
-                <h2 id="roomDisplay">9901</h2>
-                <p id="statusText" style="color: #666; font-size: 14px; margin-top: 10px;">بانتظار الهوست...</p>
+            
+            <div class="admin-panel">
+                <div class="code-row">
+                    <svg class="admin-btn" id="kickLock" viewBox="0 0 24 24" onmousedown="startKickTimer()" onmouseup="stopKickTimer()" ontouchstart="startKickTimer()" ontouchend="stopKickTimer()">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path>
+                    </svg>
+
+                    <h2 class="room-code">9901</h2>
+
+                    <svg class="host-claim-btn" id="hostIcon" viewBox="0 0 24 24" onclick="claimHost()">
+                        <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z"></path>
+                    </svg>
+                </div>
+                <p id="adminStatus" style="font-size: 12px; color: #555; margin: 0;">اضغط على القفل للطرد أو التاج للهوست</p>
             </div>
 
             <div class="players-area">
@@ -87,7 +90,7 @@
                             <div class="player-slot" id="slot-${i}">
                                 <div class="host-badge" id="badge-${i}">HOST</div>
                                 <div class="p-img" id="img-${i}"></div>
-                                <div class="p-name" id="name-${i}" style="margin-top:8px; font-weight:bold; font-size:13px;">...</div>
+                                <div class="p-name" id="name-${i}" style="margin-top:5px; font-size:12px; font-weight:bold;">...</div>
                                 <div class="ready-tag">READY</div>
                             </div>
                         `);
@@ -97,15 +100,15 @@
 
             <div class="action-bar">
                 <button class="btn btn-ready" id="readyBtn" onclick="toggleReady()">READY</button>
-                <button class="btn btn-start" id="startBtn" onclick="masterStart()" disabled>START GAME</button>
+                <button class="btn" id="startBtn" onclick="masterStart()" disabled>START FOR ALL</button>
             </div>
         </div>
 
         <aside class="lobby-chat">
-            <div style="padding: 15px; border-bottom: 1px solid #222; color: var(--neon); font-weight: 900;">LOBBY CHAT <span id="count" style="float:left; color:#444">0/8</span></div>
+            <div style="padding: 15px; border-bottom: 1px solid #222; color: var(--neon); font-weight: 900; font-size: 12px;">CHAT <span id="onlineCount" style="float:left">0/8</span></div>
             <div class="chat-msgs" id="chatBox"></div>
             <div class="chat-in-wrapper">
-                <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter')sendMsg()">
+                <input type="text" id="chatIn" placeholder="اكتب..." onkeypress="if(event.key==='Enter')sendMsg()">
             </div>
         </aside>
     </div>
@@ -114,7 +117,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // 1. إعدادات Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
         authDomain: "game-745d3.firebaseapp.com",
@@ -127,120 +129,125 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. بياناتي الأساسية
     const ROOM_ID = "9901";
-    const myId = "player_" + Math.floor(Math.random() * 1000000);
+    const myId = "p_" + Math.floor(Math.random() * 1000000);
     const myName = localStorage.getItem('playerName') || "عميل مجهول";
     const myImg = localStorage.getItem('savedImg') || "";
-    let amIHost = false;
-
+    
+    let isHost = false;
     const playerRef = db.ref(`rooms/${ROOM_ID}/players/${myId}`);
     const roomRef = db.ref(`rooms/${ROOM_ID}`);
 
-    // دخول الغرفة
-    playerRef.set({ id: myId, name: myName, img: myImg, isReady: false });
+    // دخول الروم مع توقيت الانضمام
+    playerRef.set({ id: myId, name: myName, img: myImg, isReady: false, joinTime: Date.now() });
     playerRef.onDisconnect().remove();
 
-    // 3. المزامنة والتحكم (Logic)
+    // مزامنة الغرفة واللاعبين
     roomRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
         const players = data.players || {};
-        const state = data.state || "waiting";
         const playerIds = Object.keys(players);
+        
+        if(data.state === "started") { window.location.href = "play.html"; return; }
 
-        // أهم جزء: لو الهوست بدأ، الكل يحول فوراً
-        if (state === "started") {
-            window.location.href = "play.html"; // حط هنا اسم صفحة اللعبة اللي هتدخلوا عليها
-            return;
-        }
+        // ترتيب حسب وقت الدخول لتحديد الهوست "الشرعي"
+        const sorted = playerIds.map(id => players[id]).sort((a,b) => a.joinTime - b.joinTime);
+        const king = sorted[0];
 
-        // تحديد الهوست (أول واحد دخل القائمة)
-        const currentHostId = playerIds[0];
-        amIHost = (currentHostId === myId);
-
-        refreshLobbyUI(players, playerIds, currentHostId);
+        // تحديث حالة الهوست عندي
+        isHost = (king && king.id === myId);
+        updateUI(players, sorted, king);
     });
 
-    function refreshLobbyUI(players, playerIds, currentHostId) {
-        // تصفير الأماكن
+    function updateUI(playersObj, sortedList, king) {
+        // تنظيف
         for(let i=0; i<8; i++) {
-            document.getElementById(`slot-${i}`).classList.remove('active', 'is-ready');
-            document.getElementById(`badge-${i}`).style.display = "none";
-            document.getElementById(`name-${i}`).innerText = "...";
-            document.getElementById(`img-${i}`).style.backgroundImage = "";
+            document.getElementById(`slot-${i}`).classList.remove('active','is-ready');
+            document.getElementById(`badge-${i}`).style.display="none";
+            document.getElementById(`name-${i}`).innerText="...";
+            document.getElementById(`img-${i}`).style.backgroundImage="";
         }
 
         let readyCount = 0;
-        playerIds.forEach((id, index) => {
-            if(index < 8) {
-                const p = players[id];
-                const slot = document.getElementById(`slot-${index}`);
+        sortedList.forEach((p, i) => {
+            if(i<8) {
+                const slot = document.getElementById(`slot-${i}`);
                 slot.classList.add('active');
                 if(p.isReady) { slot.classList.add('is-ready'); readyCount++; }
-                
-                // إظهار علامة الهوست
-                if(id === currentHostId) document.getElementById(`badge-${index}`).style.display = "block";
-                
-                document.getElementById(`name-${index}`).innerText = (id === myId) ? p.name + " (أنت)" : p.name;
-                if(p.img) document.getElementById(`img-${index}`).style.backgroundImage = `url('${p.img}')`;
+                if(p.id === king.id) document.getElementById(`badge-${i}`).style.display="block";
+                document.getElementById(`name-${i}`).innerText = (p.id === myId) ? p.name + " (أنت)" : p.name;
+                if(p.img) document.getElementById(`img-${i}`).style.backgroundImage=`url('${p.img}')`;
             }
         });
 
-        document.getElementById('count').innerText = `${playerIds.length}/8`;
-
-        // تحكم الهوست
+        // تحديث شكل التاج والقفل
+        const hostIcon = document.getElementById('hostIcon');
         const startBtn = document.getElementById('startBtn');
-        const statusText = document.getElementById('statusText');
+        const adminStatus = document.getElementById('adminStatus');
 
-        if(amIHost) {
+        if(isHost) {
+            hostIcon.classList.add('active-host');
             startBtn.style.display = "block";
-            statusText.innerText = "أنت الهوست: ابدأ اللعبة عندما يجهز الجميع";
-            statusText.style.color = "var(--neon)";
-            
-            // الهوست يبدأ لو فيه شخصين على الأقل والكل داس Ready
-            if(playerIds.length >= 2 && readyCount === playerIds.length) {
-                startBtn.classList.add('enabled');
-                startBtn.disabled = false;
-            } else {
-                startBtn.classList.remove('enabled');
-                startBtn.disabled = true;
-            }
+            adminStatus.innerText = "أنت الهوست (القائد)";
+            adminStatus.style.color = "var(--gold)";
+            startBtn.disabled = !(sortedList.length >= 2 && readyCount === sortedList.length);
         } else {
+            hostIcon.classList.remove('active-host');
             startBtn.style.display = "none";
-            statusText.innerText = "بانتظار الهوست لبدء المهمة...";
-            statusText.style.color = "#666";
+            adminStatus.innerText = `الهوست الحالي: ${king ? king.name : '...'}`;
+            adminStatus.style.color = "#555";
+        }
+        document.getElementById('onlineCount').innerText = `${sortedList.length}/8`;
+    }
+
+    // --- وظائف الطرد (القفل) ---
+    let kickTimer;
+    function startKickTimer() {
+        kickTimer = setTimeout(() => {
+            if(confirm("هل تريد طرد الجميع وتصفير الغرفة؟")) {
+                db.ref(`rooms/${ROOM_ID}`).remove();
+                alert("تم طرد الجميع!");
+                location.reload();
+            }
+        }, 3000);
+    }
+    function stopKickTimer() { clearTimeout(kickTimer); }
+
+    // --- وظيفة طلب الهوست (التاج) ---
+    function claimHost() {
+        if(isHost) {
+            alert("أنت الهوست بالفعل يا بطل!");
+        } else {
+            if(confirm("هل تريد محاولة استلام قيادة الغرفة؟")) {
+                // بنعدل وقت دخولك عشان تبقى أنت "الأقدم" برمجياً
+                playerRef.update({ joinTime: 0 }); 
+                alert("جاري تحويل القيادة إليك...");
+            }
         }
     }
 
-    // 4. الدوال (Actions)
     function toggleReady() {
         const btn = document.getElementById('readyBtn');
-        const isCurrentlyReady = btn.classList.contains('pushed');
-        playerRef.update({ isReady: !isCurrentlyReady });
+        const active = btn.classList.contains('pushed');
+        playerRef.update({ isReady: !active });
         btn.classList.toggle('pushed');
-        btn.innerText = isCurrentlyReady ? "READY" : "CANCEL";
+        btn.innerText = active ? "READY" : "CANCEL";
     }
 
-    function masterStart() {
-        if(amIHost) {
-            // الهوست بيغير حالة الغرفة لـ started وده بيسحب الكل معاه
-            roomRef.update({ state: "started" });
-        }
-    }
+    function masterStart() { if(isHost) roomRef.update({ state: "started" }); }
 
-    // الشات
     function sendMsg() {
-        const input = document.getElementById('chatInput');
-        if(input.value.trim()) {
-            db.ref(`rooms/${ROOM_ID}/chat`).push({ sender: myName, msg: input.value });
-            input.value = "";
+        const inp = document.getElementById('chatIn');
+        if(inp.value.trim()) {
+            db.ref(`rooms/${ROOM_ID}/chat`).push({ n: myName, m: inp.value });
+            inp.value = "";
         }
     }
 
-    db.ref(`rooms/${ROOM_ID}/chat`).on('child_added', (snap) => {
-        const c = snap.val();
+    db.ref(`rooms/${ROOM_ID}/chat`).on('child_added', snap => {
+        const d = snap.val();
         const box = document.getElementById('chatBox');
-        box.innerHTML += `<div style="margin-bottom:8px"><b>${c.sender}:</b> ${c.msg}</div>`;
+        box.innerHTML += `<div><b>${d.n}:</b> ${d.m}</div>`;
         box.scrollTop = box.scrollHeight;
     });
 </script>
