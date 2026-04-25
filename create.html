@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعداد الغرفة - خمن الفيلم</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('bg.jpg') center/cover;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex; justify-content: center; align-items: center; color: white;
+        }
+
+        .setup-card {
+            background: rgba(255, 255, 255, 0.07);
+            padding: 30px; border-radius: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            width: 95%; max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+
+        h2 { color: #f1c40f; margin-bottom: 20px; font-size: 2rem; }
+
+        label { 
+            display: block; margin-bottom: 10px; font-weight: 600; 
+            color: #f1f1f1; text-align: right;
+        }
+
+        /* شبكة التحديات */
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .challenge-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px 5px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .challenge-item i {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: #3498db;
+        }
+
+        .challenge-item span { font-size: 0.85rem; font-weight: bold; }
+
+        .challenge-item:hover { background: rgba(255,255,255,0.15); }
+
+        /* ستايل التحديد */
+        .challenge-item.active {
+            border-color: #f1c40f;
+            background: rgba(241, 196, 15, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .input-group { margin-bottom: 15px; text-align: right; }
+
+        input {
+            width: 100%; padding: 12px; border-radius: 12px; border: none;
+            background: rgba(0,0,0,0.4); color: white; font-size: 1rem; 
+            outline: none; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white; border: none; padding: 15px;
+            border-radius: 50px; font-size: 1.2rem; font-weight: bold; 
+            cursor: pointer; transition: 0.3s; width: 100%; margin-top: 10px;
+        }
+
+        .start-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        .back-link { 
+            display: block; margin-top: 15px; color: #aaa; text-decoration: none; font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="setup-card">
+        <h2><i class="fas fa-plus-circle"></i> إنشاء غرفة</h2>
+        
+        <label>اختر نوع التحدي:</label>
+        <div class="challenge-grid">
+            <div class="challenge-item active" onclick="selectMode(this, 'emoji.html')">
+                <i class="fas fa-icons"></i>
+                <span>إيموجي</span>
+            </div>
+            <div class="challenge-item" onclick="selectMode(this, 'actors.html')">
+                <i class="fas fa-user-tie"></i>
+                <span>الممثل</span>
+            </div>
+            <div class="challenge-item" onclick="selectMode(this, 'music.html')">
+                <i class="fas fa-music"></i>
+                <span>لحن</span>
+            </div>
+            <div class="challenge-item" onclick="selectMode(this, 'posters.html')">
+                <i class="fas fa-image"></i>
+                <span>بوستر</span>
+            </div>
+            <div class="challenge-item" onclick="selectMode(this, 'years.html')">
+                <i class="fas fa-calendar-alt"></i>
+                <span>السنة</span>
+            </div>
+            <div class="challenge-item" onclick="selectMode(this, 'speed.html')">
+                <i class="fas fa-bolt"></i>
+                <span>سرعة</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>اسم الغرفة:</label>
+            <input type="text" id="room-name" placeholder="مثلاً: تحدي الابطال">
+        </div>
+
+        <div class="input-group">
+            <label>عدد الجولات:</label>
+            <input type="number" id="rounds" value="10">
+        </div>
+
+        <button class="start-btn" onclick="startAdventure()">ابدأ المغامرة الآن</button>
+        
+        <a href="speed.html" class="back-link">← رجوع للقائمة</a>
+    </div>
+
+    <script>
+        // الصفحة الافتراضية لو مداسش على حاجة
+        let selectedPage = "emoji.html"; 
+
+        function selectMode(element, pageName) {
+            // شيل الـ active من الكل وحطه للي اتداس عليه
+            document.querySelectorAll('.challenge-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+            
+            // خزن اسم الصفحة اللي هنروح لها
+            selectedPage = pageName;
+        }
+
+        function startAdventure() {
+            const roomName = document.getElementById('room-name').value;
+            const rounds = document.getElementById('rounds').value;
+
+            if(roomName.trim() === "") {
+                alert("اكتب اسم الغرفة الأول يا بطل!");
+                return;
+            }
+
+            // خزن البيانات عشان تحتاجها في اللوبي أو اللعبة
+            localStorage.setItem('roomName', roomName);
+            localStorage.setItem('rounds', rounds);
+            localStorage.setItem('gameType', selectedPage);
+
+            // انقل اللاعب للصفحة اللي اختارها
+            window.location.href = selectedPage;
+        }
+    </script>
+</body>
+</html>

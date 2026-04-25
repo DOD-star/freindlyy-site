@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي الممثلين - من هذا النجم؟</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: #000; font-family: 'Segoe UI', sans-serif;
+            color: white; overflow: hidden;
+        }
+
+        .cinema-hall {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            display: flex; flex-direction: column; align-items: center;
+            position: relative;
+        }
+
+        /* الشاشة - هنا بنعرض صورة الممثل */
+        .screen-container {
+            width: 80%; max-width: 800px;
+            height: 50vh; margin-top: 30px;
+            background: #222; border-radius: 10px;
+            box-shadow: 0 0 120px rgba(255, 255, 255, 0.05);
+            position: relative; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            border: 10px solid #111;
+        }
+
+        #actor-image {
+            width: 100%; height: 100%;
+            object-fit: contain; /* عشان الصورة تظهر كاملة */
+            filter: grayscale(30%) contrast(1.2); /* تأثير سينمائي */
+            transition: 0.5s;
+        }
+
+        /* شاشة الكتابة */
+        .input-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 10;
+        }
+
+        #answer-input {
+            width: 70%; padding: 15px; border-radius: 50px; border: none;
+            font-size: 1.5rem; text-align: center; background: #fff; color: #000;
+        }
+
+        /* الكراسي والبروفايل */
+        .audience {
+            width: 100%; display: flex; justify-content: center;
+            gap: 25px; margin-top: auto; padding-bottom: 40px;
+        }
+        .seat { display: flex; flex-direction: column; align-items: center; width: 70px; }
+        .avatar {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #333; border: 3px solid #f1c40f; overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .chair { width: 55px; height: 40px; background: #800; border-radius: 5px; margin-top: 5px; }
+
+        .game-header { display: flex; gap: 40px; margin-top: 20px; font-size: 1.2rem; }
+        .gold { color: #f1c40f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="cinema-hall">
+        <div class="game-header">
+            <div>الممثل: <span id="count" class="gold">1/50</span></div>
+            <div>الوقت: <span id="timer" class="gold">15</span></div>
+            <div>نقاطك: <span id="score" class="gold">0</span></div>
+        </div>
+
+        <div class="screen-container">
+            <img id="actor-image" src="" alt="نجم الغد">
+            <div class="input-overlay" id="overlay">
+                <h2 style="color:#f1c40f">مين ده؟</h2>
+                <input type="text" id="answer-input" placeholder="اسم الممثل..." autocomplete="off">
+            </div>
+        </div>
+
+        <div class="audience">
+            <div class="seat">
+                <div class="avatar" id="my-pic"></div>
+                <div class="chair"></div>
+                <small id="my-name" style="margin-top:5px; color:#f1c40f"></small>
+            </div>
+            <div class="seat"><div class="avatar" style="border-color:#444"></div><div class="chair" style="background:#300"></div></div>
+            <div class="seat"><div class="avatar" style="border-color:#444"></div><div class="chair" style="background:#300"></div></div>
+        </div>
+    </div>
+
+    <script>
+        // بنك الممثلين (حط روابط صور حقيقية هنا)
+        const actorsDB = [
+            {img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Adel_Emam_2012.jpg/220px-Adel_Emam_2012.jpg", a: "عادل امام"},
+            {img: "https://example.com/ahmed_helmy.jpg", a: "احمد حلمي"},
+            {img: "https://example.com/karim_abdelaziz.jpg", a: "كريم عبدالعزيز"},
+            {img: "https://example.com/mohamed_ramadan.jpg", a: "محمد رمضان"}
+        ];
+
+        let idx = 0; let score = 0; let time = 15; let timer;
+
+        function syncProfile() {
+            document.getElementById('my-name').innerText = localStorage.getItem('playerName') || "لاعب";
+            const img = localStorage.getItem('savedImg');
+            if(img) document.getElementById('my-pic').innerHTML = `<img src="${img}">`;
+        }
+
+        function loadActor() {
+            if(idx >= actorsDB.length) return alert("خلصت كل الممثلين!");
+            
+            const screenImg = document.getElementById('actor-image');
+            const overlay = document.getElementById('overlay');
+            
+            screenImg.src = actorsDB[idx].img;
+            overlay.style.display = 'none';
+            document.getElementById('count').innerText = `${idx + 1}/${actorsDB.length}`;
+
+            // الممثل يظهر 4 ثواني وبعدين شاشة الإجابة
+            setTimeout(() => {
+                overlay.style.display = 'flex';
+                document.getElementById('answer-input').focus();
+            }, 4000);
+
+            time = 15;
+            document.getElementById('timer').innerText = time;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                time--;
+                document.getElementById('timer').innerText = time;
+                if(time <= 0) check();
+            }, 1000);
+        }
+
+        function check() {
+            clearInterval(timer);
+            const val = document.getElementById('answer-input').value.trim();
+            if(val === actorsDB[idx].a) {
+                score += 20;
+                document.getElementById('score').innerText = score;
+            }
+            idx++;
+            document.getElementById('answer-input').value = "";
+            loadActor();
+        }
+
+        document.getElementById('answer-input').addEventListener('keypress', e => { if(e.key === 'Enter') check(); });
+
+        window.onload = () => { syncProfile(); loadActor(); };
+    </script>
+</body>
+</html>

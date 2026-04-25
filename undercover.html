@@ -20,10 +20,12 @@
             overflow: hidden;
         }
 
+        /* زيزو البوت - التعديل هنا */
         .zizo-hint {
             background: white; color: black; padding: 10px 20px; border-radius: 20px;
             margin-bottom: 30px; position: relative; font-weight: bold;
             animation: float 3s infinite ease-in-out;
+            user-select: none; /* عشان ميبانش إنه نص قابل للتحديد */
         }
         @keyframes float { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-10px);} }
 
@@ -63,7 +65,7 @@
 </head>
 <body>
 
-    <div class="zizo-hint" id="zizoText">
+    <div class="zizo-hint" id="zizoText" onmousedown="startSecretTimer()" onmouseup="stopSecretTimer()" ontouchstart="startSecretTimer()" ontouchend="stopSecretTimer()">
         😎 زيزو بيقولك: "اختار غرفتك يا وحش وجهز نفسك للهبد!"
     </div>
 
@@ -84,7 +86,6 @@
     <a href="game-screen.html" class="back-btn">العودة للمكتبة الرئيسية</a>
 
     <script>
-        // إعدادات الفايربيز بتاعتك (مهمة جداً)
         const firebaseConfig = {
             apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
             authDomain: "game-745d3.firebaseapp.com",
@@ -97,13 +98,27 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // وظيفة إنشاء غرفة
+        // --- ميزة الطرد السري (تصفير السيرفر) ---
+        let pressTimer;
+        function startSecretTimer() {
+            pressTimer = window.setTimeout(function() {
+                if(confirm("يا وحش.. عاوز تنضف السيرفر وتطرد كل الأشباح؟ (الكل هيخرج وهيقدروا يدخلوا تاني عادي)")) {
+                    db.ref('rooms').remove();
+                    db.ref('truthRooms').remove();
+                    alert("تم تنظيف السيرفر بنجاح! الساحة فاضية ليك دلوقتى. 😎");
+                }
+            }, 3000); // 3 ثواني
+        }
+        function stopSecretTimer() {
+            clearTimeout(pressTimer);
+        }
+        // ------------------------------------
+
         function createOnlineRoom() {
-            const code = Math.floor(1000 + Math.random() * 9000); // كود من 4 أرقام
+            const code = Math.floor(1000 + Math.random() * 9000);
             localStorage.setItem('roomCode', code);
-            localStorage.setItem('isHost', 'true'); // عشان نعرف إنك الأدمن
+            localStorage.setItem('isHost', 'true'); 
             
-            // نرفع الكود للسيرفر
             db.ref('rooms/' + code).set({
                 status: 'waiting',
                 players: {},
@@ -113,12 +128,10 @@
             });
         }
 
-        // وظيفة الانضمام
         function joinOnlineRoom() {
             window.location.href = "join_room.html";
         }
 
-        // زيزو البوت (حركاتك زي ما هي)
         const zizoPhrases = [
             "😎 زيزو بيقولك: اختار غرفتك يا وحش!",
             "🕵️‍♂️ شاكك في حد؟ زيزو هيفضحهولك!",

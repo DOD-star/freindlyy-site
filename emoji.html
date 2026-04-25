@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سينما الإيموجي - 90 تحدي مصري</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: #000; font-family: 'Segoe UI', sans-serif;
+            color: white; overflow: hidden;
+        }
+
+        .cinema-hall {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            display: flex; flex-direction: column; align-items: center;
+            position: relative;
+        }
+
+        /* كود الغرفة */
+        .room-tag {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255, 215, 0, 0.1); padding: 10px 20px;
+            border-radius: 10px; border: 1px solid #f1c40f;
+            font-weight: bold; color: #f1c40f; z-index: 100;
+        }
+
+        /* الشاشة السينمائية */
+        .screen-container {
+            width: 85%; max-width: 900px;
+            height: 45vh; margin-top: 40px;
+            background: #fff; border-radius: 5px;
+            box-shadow: 0 0 100px rgba(255, 255, 255, 0.1);
+            position: relative; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            border: 12px solid #111;
+        }
+
+        /* الإيموجي بستايل الـ 3D Glossy */
+        #emoji-display {
+            font-size: 8rem;
+            filter: drop-shadow(0 20px 20px rgba(0,0,0,0.4));
+            transition: 0.5s transform cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* منطقة الإجابة داخل الشاشة */
+        .input-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #answer-input {
+            width: 70%; padding: 15px; border-radius: 10px; border: none;
+            font-size: 1.5rem; text-align: center; background: #eee; color: #000;
+            outline: none; box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        /* منطقة الكراسي واللاعبين */
+        .audience-area {
+            width: 100%; display: flex; justify-content: center;
+            gap: 25px; margin-top: auto; padding-bottom: 50px;
+        }
+
+        .seat-slot { display: flex; flex-direction: column; align-items: center; width: 80px; }
+
+        .avatar-placeholder {
+            width: 65px; height: 65px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); border: 2px dashed rgba(255,255,255,0.2);
+            margin-bottom: 10px; display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+
+        .avatar-placeholder img { width: 100%; height: 100%; object-fit: cover; }
+
+        .seat-slot.me .avatar-placeholder {
+            border: 3px solid #f1c40f; box-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
+        }
+
+        .cinema-seat {
+            width: 60px; height: 45px; background: #700;
+            border-radius: 10px 10px 2px 2px; border-bottom: 6px solid #400;
+        }
+
+        .name-label { font-size: 0.8rem; margin-top: 10px; color: #aaa; font-weight: bold; }
+        .seat-slot.me .name-label { color: #f1c40f; }
+
+        /* إحصائيات الجولة */
+        .game-stats { display: flex; gap: 40px; margin-top: 20px; font-size: 1.3rem; }
+        .stat-val { color: #f1c40f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="cinema-hall">
+        <div class="room-tag">رقم الغرفة: <span id="room-id">--</span></div>
+
+        <div class="game-stats">
+            <div>الجولة: <span id="round-count" class="stat-val">1/90</span></div>
+            <div>الوقت: <span id="timer" class="stat-val">20</span></div>
+            <div>النقاط: <span id="score" class="stat-val">0</span></div>
+        </div>
+
+        <div class="screen-container">
+            <div id="emoji-display">🎬</div>
+            <div class="input-overlay" id="input-screen">
+                <h2 style="color:#f1c40f; margin-bottom: 20px;">خمن اسم العمل!</h2>
+                <input type="text" id="answer-input" placeholder="اكتب هنا..." autocomplete="off">
+            </div>
+        </div>
+
+        <div class="audience-area">
+            <div class="seat-slot me">
+                <div class="avatar-placeholder" id="my-avatar"><i class="fas fa-user"></i></div>
+                <div class="cinema-seat"></div>
+                <div class="name-label" id="my-name">تحميل..</div>
+            </div>
+            <div class="seat-slot"><div class="avatar-placeholder"><i class="fas fa-plus" style="opacity:0.1"></i></div><div class="cinema-seat"></div><div class="name-label">فارغ</div></div>
+            <div class="seat-slot"><div class="avatar-placeholder"><i class="fas fa-plus" style="opacity:0.1"></i></div><div class="cinema-seat"></div><div class="name-label">فارغ</div></div>
+            <div class="seat-slot"><div class="avatar-placeholder"><i class="fas fa-plus" style="opacity:0.1"></i></div><div class="cinema-seat"></div><div class="name-label">فارغ</div></div>
+        </div>
+    </div>
+
+    <script>
+        // بنك الأسئلة الضخم (90 سؤال: أفلام، مسلسلات، مسرحيات مصري)
+        const db = [
+            {q: "🐘🟦", a: "الفيل الازرق"}, {q: "👳‍♂️🏢", a: "عسل اسود"}, {q: "🕶️👨‍👩‍👧‍👦", a: "ولاد رزق"}, {q: "👮‍♂️🧺", a: "الخلية"}, {q: "🚢🥶", a: "تيتانيك"},
+            {q: "👰🏢", a: "نيللي وشريهان"}, {q: "🧖‍♂️👜", a: "الناظر"}, {q: "🧛‍♂️🏠", a: "ما وراء الطبيعة"}, {q: "🕵️‍♂️📺", a: "الاختيار"}, {q: "🤡🎈", a: "ات"},
+            {q: "🍳👨‍🍳", a: "طباخ الريس"}, {q: "👳‍♂️🕌", a: "الجزيرة"}, {q: "🤼‍♂️🇪🇬", a: "النمر الاسود"}, {q: "🏫👨‍🏫", a: "مدرسة المشاغبين"}, {q: "🎭🏛️", a: "الواد سيد الشغال"},
+            {q: "🚶‍♂️🌧️", a: "غريب في بيتي"}, {q: "👮‍♂️👳‍♂️", a: "الباشا تلميذ"}, {q: "🧔🌙", a: "ليالي الحلمية"}, {q: "🎻🎶", a: "الضوء الشارد"}, {q: "🤱🤷‍♂️", a: "حبيبي نائما"},
+            {q: "🏃‍♂️💨", a: "طير انت"}, {q: "💻🕵️‍♂️", a: "الهرم الرابع"}, {q: "🏠😱", a: "البيت بيتي"}, {q: "👴💊", a: "X لارج"}, {q: "🥊🔥", a: "حرب كرموز"},
+            {q: "🧔🏢", a: "امير الظلام"}, {q: "🕊️🕌", a: "المهاجر"}, {q: "🍳🔥", a: "طباخ الريس"}, {q: "👰🧟", a: "سابع جار"}, {q: "💎💍", a: "لصوص لكن ظرفاء"},
+            {q: "⚖️👮", a: "وش اجرام"}, {q: "🌊🦈", a: "المصلحة"}, {q: "🤰🤷‍♂️", a: "حبيبي نائما"}, {q: "🧟‍♂️🏥", a: "كوفيد 25"}, {q: "🔫🧔", a: "كلبش"},
+            {q: "🪞👩", a: "لؤلؤ"}, {q: "👳‍♂️📦", a: "صعيدي في الجامعة الامريكية"}, {q: "🔥🏠", a: "نيران صديقة"}, {q: "💵🎰", a: "سوق الكانتو"}, {q: "👰🛒", a: "عريس من جهة امنية"},
+            {q: "🐕🧔", a: "كلب بلدي"}, {q: "🎞️👳‍♂️", a: "بوحة"}, {q: "🕋👳‍♂️", a: "المهاجر"}, {q: "🕶️👊", a: "ابراهيم الابيض"}, {q: "🕌👳‍♂️", a: "الارهابي"},
+            {q: "🤡🃏", a: "الفرح"}, {q: "🚍🏟️", a: "يا انا يا خالتي"}, {q: "🏨😱", a: "جريمة في المعادي"}, {q: "👴🏰", a: "صاحب السعادة"}, {q: "🧛‍♂️🎬", a: "خط دم"},
+            {q: "🕵️‍♂️🚬", a: "رأفت الهجان"}, {q: "👸🏼🏠", a: "هوانم جاردن سيتي"}, {q: "👨‍👩‍👦🏠", a: "يوميات ونيس"}, {q: "👳‍♂️💼", a: "السفارة في العمارة"}, {q: "🍫🏭", a: "تيتو"},
+            {q: "👰🤷‍♀️", a: "عايزة اتجوز"}, {q: "🧟‍♂️🕌", a: "الانس والنمس"}, {q: "🕌🕋", a: "الرسالة"}, {q: "⚖️🏛️", a: "ضد الحكومة"}, {q: "👳‍♂️🏖️", a: "شورت وفانلة وكاب"},
+            {q: "🧔🔫", a: "تيرة والجن"}, {q: "💊💊", a: "الفيل الازرق 2"}, {q: "👸🏼🕌", a: "شجرة الدر"}, {q: "🕌🕵️‍♂️", a: "الزيني بركات"}, {q: "👨‍👩‍👧‍👦🏠", a: "عائلة الحاج متولي"},
+            {q: "🏢🏢", a: "عمارة يعقوبيان"}, {q: "👰💄", a: "لا تطفئ الشمس"}, {q: "👸🏼🤴", a: "حريم السلطان"}, {q: "👳‍♂️⚔️", a: "الفتوة"}, {q: "👰👨‍⚖️", a: "اريد حلا"},
+            {q: "🦁🏛️", a: "شاهد ماشفش حاجة"}, {q: "👳‍♂️🎭", a: "ريا وسكينة"}, {q: "🧔⚖️", a: "كلمني شكرا"}, {q: "👰💍", a: "لعبة نيوتن"}, {q: "🕵️‍♂️📺", a: "كف القمر"},
+            {q: "👰🛒", a: "مبروك جالك قلق"}, {q: "🏃‍♂️🚕", a: "ليلة هنا وسرور"}, {q: "🤰🤷‍♂️", a: "بشتري راجل"}, {q: "🕌🌙", a: "ليالي الحلمية"}, {q: "🕶️👨", a: "تلك الايام"},
+            {q: "🤴👳‍♂️", a: "الكنز"}, {q: "🕵️‍♂️🚬", a: "دم الغزال"}, {q: "🏢🕋", a: "ساعة ونص"}, {q: "🦁👮‍♂️", a: "واحد من الناس"}, {q: "👰👸🏼", a: "نيللي وشريهان"},
+            {q: "🧔🔫", a: "ملاكي اسكندرية"}, {q: "🕵️‍♂️🏛️", a: "الهروب"}, {q: "🏢🕌", a: "واحد صحيح"}, {q: "👰🤴", a: "جوازة ميري"}, {q: "🎭🏛️", a: "المتزوجون"}
+        ];
+
+        let idx = 0; let score = 0; let timer; let time = 20;
+
+        // دالة ربط البروفايل (من صفحة الـ Registration)
+        function sync() {
+            const name = localStorage.getItem('playerName') || "لاعب مجهول";
+            const img = localStorage.getItem('savedImg');
+            document.getElementById('my-name').innerText = name;
+            if(img) document.getElementById('my-avatar').innerHTML = `<img src="${img}">`;
+            document.getElementById('room-id').innerText = Math.floor(1000 + Math.random() * 9000);
+        }
+
+        function play() {
+            if(idx >= db.length) return alert("إنت أسطورة! خلصت الـ 90 سؤال.");
+            const screen = document.getElementById('emoji-display');
+            const inputScreen = document.getElementById('input-screen');
+            const input = document.getElementById('answer-input');
+
+            screen.innerText = db[idx].q;
+            inputScreen.style.display = 'none';
+            input.value = '';
+            document.getElementById('round-count').innerText = `${idx + 1}/90`;
+
+            setTimeout(() => {
+                inputScreen.style.display = 'flex';
+                input.focus();
+            }, 3000);
+
+            time = 20;
+            document.getElementById('timer').innerText = time;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                time--;
+                document.getElementById('timer').innerText = time;
+                if(time <= 0) check();
+            }, 1000);
+        }
+
+        function check() {
+            clearInterval(timer);
+            const userAns = document.getElementById('answer-input').value.trim();
+            if(userAns === db[idx].a) {
+                score += 10 + time;
+                document.getElementById('score').innerText = score;
+            }
+            idx++;
+            play();
+        }
+
+        document.getElementById('answer-input').addEventListener('keypress', e => { if(e.key === 'Enter') check(); });
+
+        window.onload = () => { sync(); play(); };
+    </script>
+</body>
+</html>
