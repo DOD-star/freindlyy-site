@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>انضمام للتحدي - أونلاين</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex; justify-content: center; align-items: center; color: white;
+        }
+
+        .join-card {
+            background: rgba(255, 255, 255, 0.07);
+            padding: 40px; border-radius: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            width: 95%; max-width: 450px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+
+        h2 { color: #f1c40f; margin-bottom: 10px; font-size: 2rem; }
+        p { color: #aaa; margin-bottom: 30px; }
+
+        .input-group { margin-bottom: 20px; text-align: right; }
+        label { display: block; margin-bottom: 10px; color: #f1f1f1; font-weight: 600; }
+
+        input {
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            background: rgba(0,0,0,0.5); color: white; font-size: 1.2rem; 
+            outline: none; border: 1px solid rgba(255,255,255,0.1);
+            text-align: center; transition: 0.3s;
+        }
+
+        input:focus { border-color: #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.2); }
+
+        .join-btn {
+            background: linear-gradient(45deg, #f1c40f, #f39c12);
+            color: black; border: none; padding: 18px;
+            border-radius: 50px; font-size: 1.3rem; font-weight: bold; 
+            cursor: pointer; transition: 0.3s; width: 100%; margin-top: 10px;
+        }
+
+        .join-btn:hover { transform: scale(1.03); filter: brightness(1.1); }
+
+        .loading-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            justify-content: center; align-items: center; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loading-overlay" id="loader">
+        <i class="fas fa-spinner fa-spin fa-3x" style="color: #f1c40f;"></i>
+    </div>
+
+    <div class="join-card">
+        <i class="fas fa-ticket-alt" style="font-size: 3rem; color: #f1c40f; margin-bottom: 20px;"></i>
+        <h2>قطع التذكرة</h2>
+        <p>دخل الكود عشان تحجز مكانك في السينما</p>
+        
+        <div class="input-group">
+            <label>اسمك الفني:</label>
+            <input type="text" id="guest-name" placeholder="مثلاً: الهضبة">
+        </div>
+
+        <div class="input-group">
+            <label>كود الغرفة:</label>
+            <input type="number" id="room-code-input" placeholder="0000">
+        </div>
+
+        <button class="join-btn" onclick="processJoin()">دخول التحدي</button>
+        <a href="index.html" style="display:block; margin-top:20px; color:#666; text-decoration:none;">رجوع للرئيسية</a>
+    </div>
+
+    <script>
+        // 1. حط الكونفيج بتاعك هنا
+        const firebaseConfig = {
+            // ضع بياناتك هنا
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        function processJoin() {
+            const guestName = document.getElementById('guest-name').value.trim();
+            const inputCode = document.getElementById('room-code-input').value.trim();
+            const loader = document.getElementById('loader');
+
+            if (guestName === "" || inputCode === "") {
+                alert("يا فنان كمل بياناتك!");
+                return;
+            }
+
+            loader.style.display = 'flex';
+
+            // 2. البحث في الفايربيز عن الغرفة
+            database.ref('rooms/' + inputCode).once('value').then((snapshot) => {
+                loader.style.display = 'none';
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // 3. تخزين بيانات اللاعب محلياً عشان صفحة اللعب تقراها
+                    localStorage.setItem('playerName', guestName);
+                    localStorage.setItem('roomCode', inputCode);
+                    localStorage.setItem('roomName', data.roomName);
+
+                    // 4. أهم سطر: التحويل للصفحة اللي الـ Host اختارها في Create
+                    // القيمة دي متخزنة في الفايربيز (مثل: emoji.html أو actors.html)
+                    window.location.href = data.gameType; 
+
+                } else {
+                    alert("الكود ده مش موجود! اتأكد من الـ Host.");
+                }
+            }).catch((error) => {
+                loader.style.display = 'none';
+                console.error(error);
+                alert("حصل مشكلة في الاتصال بالسينما!");
+            });
+        }
+    </script>
+</body>
+</html>
