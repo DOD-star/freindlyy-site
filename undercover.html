@@ -20,12 +20,12 @@
             overflow: hidden;
         }
 
-        /* زيزو البوت - التعديل هنا */
+        /* زيزو البوت */
         .zizo-hint {
             background: white; color: black; padding: 10px 20px; border-radius: 20px;
             margin-bottom: 30px; position: relative; font-weight: bold;
             animation: float 3s infinite ease-in-out;
-            user-select: none; /* عشان ميبانش إنه نص قابل للتحديد */
+            user-select: none;
         }
         @keyframes float { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-10px);} }
 
@@ -102,36 +102,49 @@
         let pressTimer;
         function startSecretTimer() {
             pressTimer = window.setTimeout(function() {
-                if(confirm("يا وحش.. عاوز تنضف السيرفر وتطرد كل الأشباح؟ (الكل هيخرج وهيقدروا يدخلوا تاني عادي)")) {
+                if(confirm("يا وحش.. عاوز تنضف السيرفر وتطرد كل الأشباح؟")) {
                     db.ref('rooms').remove();
                     db.ref('truthRooms').remove();
                     alert("تم تنظيف السيرفر بنجاح! الساحة فاضية ليك دلوقتى. 😎");
                 }
-            }, 3000); // 3 ثواني
+            }, 3000); 
         }
         function stopSecretTimer() {
             clearTimeout(pressTimer);
         }
-        // ------------------------------------
 
+        // --- دالة إنشاء الغرفة ---
         function createOnlineRoom() {
             const code = Math.floor(1000 + Math.random() * 9000);
+            
+            // حفظ البيانات في المتصفح قبل الانتقال
             localStorage.setItem('roomCode', code);
             localStorage.setItem('isHost', 'true'); 
             
+            // رفع الغرفة على Firebase
             db.ref('rooms/' + code).set({
                 status: 'waiting',
-                players: {},
                 createdAt: Date.now()
             }).then(() => {
+                console.log("Room Created Successfully: " + code);
+                // محاولة الانتقال لصفحة الهوست
                 window.location.href = "create_room.html";
+            }).catch((err) => {
+                alert("فشل في الاتصال بالسيرفر: " + err.message);
             });
+
+            // كود احتياطي لو الملف مش موجود عشان ميرجعكش للبداية من غير ما تفهم
+            setTimeout(() => {
+                alert("لو الصفحة مابتحملش، اتأكد إن عندك ملف اسمه create_room.html في نفس الفولدر!");
+            }, 2000);
         }
 
+        // --- دالة الانضمام ---
         function joinOnlineRoom() {
             window.location.href = "join_room.html";
         }
 
+        // بوت زيزو والعبارات العشوائية
         const zizoPhrases = [
             "😎 زيزو بيقولك: اختار غرفتك يا وحش!",
             "🕵️‍♂️ شاكك في حد؟ زيزو هيفضحهولك!",

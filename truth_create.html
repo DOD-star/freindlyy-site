@@ -2,51 +2,60 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Truth or Dare - Arena Online</title>
+    <title>Truth or Dare - Pro Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         :root { --neon: #00d2ff; --spy: #9d50bb; --bot: #00ff95; --bg: #0b0e1a; }
-        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Cairo', sans-serif; background: var(--bg); color: white; overflow: hidden; }
-        #gameLayout { display: grid; grid-template-columns: 280px 1fr 320px; height: 100vh; }
-
-        .room-header {
-            position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.6);
-            padding: 10px 20px; border-radius: 15px; border: 1px solid var(--spy);
-            display: flex; align-items: center; gap: 10px; z-index: 1000; backdrop-filter: blur(10px);
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100vh; 
+            font-family: 'Cairo', sans-serif; 
+            background: var(--bg); color: white; 
+            overflow-y: auto;
         }
 
-        .players-side { background: rgba(22, 27, 42, 0.95); border-left: 1px solid #2d3446; padding: 20px; padding-top: 80px; overflow-y: auto; }
+        #gameLayout { 
+            display: grid; 
+            grid-template-columns: 280px 1fr 320px; 
+            min-height: 100vh; 
+        }
+
+        .room-header { 
+            position: sticky; top: 0; background: rgba(0,0,0,0.8);
+            padding: 10px 20px; border-bottom: 1px solid var(--spy);
+            display: flex; align-items: center; justify-content: center; gap: 10px; 
+            z-index: 1000; backdrop-filter: blur(10px);
+        }
+
+        .players-side { background: rgba(22, 27, 42, 0.95); border-left: 1px solid #2d3446; padding: 20px; }
         .user-info { text-align: center; padding: 15px; border-radius: 20px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--spy); margin-bottom: 20px; }
-        .user-info img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; background: #222; }
+        .user-info img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
 
-        .player-item { padding: 12px; border-radius: 12px; background: #1a1a2e; margin-bottom: 10px; border: 1px solid #2d3446; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
-        .player-item img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--bot); background: #222; }
+        .player-item { padding: 10px; border-radius: 12px; background: #1a1a2e; margin-bottom: 8px; border: 1px solid #2d3446; display: flex; align-items: center; gap: 10px; }
+        .player-item img { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--bot); }
 
-        .game-main { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; background: radial-gradient(circle at center, #1a1a2e 0%, #0b0e1a 100%); }
-        .challenge-card { width: 100%; max-width: 500px; min-height: 320px; background: #161b2a; border: 2px solid #2d3446; border-radius: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transition: 0.5s; }
-        .card-label { position: absolute; top: -15px; background: #fff; color: #000; padding: 5px 25px; border-radius: 20px; font-weight: 900; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-transform: uppercase; }
+        .game-main { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 20px; background: radial-gradient(circle at center, #1a1a2e 0%, #0b0e1a 100%); }
+        .challenge-card { width: 100%; max-width: 500px; min-height: 350px; background: #161b2a; border: 2px solid #2d3446; border-radius: 35px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .card-label { position: absolute; top: -15px; background: #fff; color: #000; padding: 5px 25px; border-radius: 20px; font-weight: 900; }
         
-        .spin-button { background: linear-gradient(90deg, #00d2ff, #9d50bb); color: white; border: none; padding: 15px 60px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 35px; box-shadow: 0 5px 20px rgba(157, 80, 187, 0.4); transition: 0.3s; }
-        .spin-button:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(157, 80, 187, 0.6); }
-        .spin-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .spin-button { background: linear-gradient(90deg, #00d2ff, #9d50bb); color: white; border: none; padding: 18px 50px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 30px; box-shadow: 0 5px 20px rgba(157, 80, 187, 0.4); }
+        .spin-button:disabled { opacity: 0.5; }
 
-        .chat-side { background: #0b0e1a; border-right: 1px solid #2d3446; display: flex; flex-direction: column; }
+        .chat-side { background: #0b0e1a; border-right: 1px solid #2d3446; display: flex; flex-direction: column; max-height: 100vh; position: sticky; top: 0; }
         .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .chat-msg { background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4; border-right: 3px solid transparent; }
-        .chat-msg.me { border-right-color: var(--neon); background: rgba(0, 210, 255, 0.05); }
-        .chat-msg b { color: var(--neon); }
+        .chat-msg { background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 10px; font-size: 14px; }
+        .chat-msg.me { border-right: 3px solid var(--neon); background: rgba(0, 210, 255, 0.05); }
         .chat-input-row { padding: 15px; background: #161b2a; display: flex; gap: 10px; border-top: 1px solid #2d3446; }
         .chat-input-row input { flex: 1; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; outline: none; }
         
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--spy); border-radius: 10px; }
+        .challenge-card.truth { border-color: var(--neon); }
+        .challenge-card.dare { border-color: var(--spy); }
 
-        .challenge-card.truth { border-color: var(--neon); box-shadow: 0 0 30px rgba(0, 210, 255, 0.2); }
-        .challenge-card.dare { border-color: var(--spy); box-shadow: 0 0 30px rgba(157, 80, 187, 0.2); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--spy); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -62,21 +71,20 @@
             <img src="" id="myAvatar">
             <div id="myNameDisp" style="font-weight: 900; color: var(--neon); margin-top: 5px;"></div>
         </div>
-        <div style="font-size: 11px; color: #555; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #222; padding-bottom: 5px;">اللاعبين المتصلين</div>
         <div id="lobbyList"></div>
     </aside>
 
     <main class="game-main">
         <div class="challenge-card" id="mainCard">
             <div class="card-label" id="cardLabel" style="display:none"></div>
-            <div id="questionText" style="font-size: 22px; font-weight: 700;">في انتظار بدأ التحدي.. 🎲</div>
-            <div id="senderName" style="font-size: 12px; color: #666; margin-top: 15px;"></div>
+            <div id="questionText" style="font-size: 24px; font-weight: 700;">جاهز للتحدي؟ 🎲</div>
+            <div id="senderName" style="font-size: 13px; color: #666; margin-top: 20px;"></div>
         </div>
-        <button class="spin-button" id="spinBtn" onclick="sendChallenge()">ارسل تحدي للكل 🎲</button>
+        <button class="spin-button" id="spinBtn" onclick="botGenerate()">بوت: إرسال تحدي جديد 🔥</button>
     </main>
 
     <aside class="chat-side">
-        <div style="padding:15px; border-bottom: 1px solid #2d3446; color: var(--spy); font-weight: bold; letter-spacing: 1px;">LIVE CHAT</div>
+        <div style="padding:15px; border-bottom: 1px solid #2d3446; color: var(--spy); font-weight: bold;">LIVE CHAT</div>
         <div class="chat-area" id="chatBox"></div>
         <div class="chat-input-row">
             <input type="text" id="chatInput" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter')sendMsg()">
@@ -85,7 +93,7 @@
 </div>
 
 <script>
-    // 1. Firebase Config
+    // Firebase Setup
     const firebaseConfig = {
         apiKey: "AIzaSyDCRXJY0Ve5YZIXOOnTVIwU9T1zpCSX-Cs",
         authDomain: "game-745d3.firebaseapp.com",
@@ -98,7 +106,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. سحب البيانات الشخصية
     const myName = localStorage.getItem('playerName') || "لاعب_" + Math.floor(Math.random()*100);
     const myImg = localStorage.getItem('savedImg') || "";
     const roomCode = localStorage.getItem('activeRoomCode') || "9901";
@@ -108,90 +115,117 @@
     if(myImg) document.getElementById('myAvatar').src = myImg;
 
     const roomRef = db.ref('truthRooms/' + roomCode);
-    
-    // 3. التواجد أونلاين
     const myPlayerRef = roomRef.child('players').child(myName.replace(/\s/g, '_'));
     myPlayerRef.set({ name: myName, img: myImg });
     myPlayerRef.onDisconnect().remove();
 
-    // 4. تحديث قائمة اللاعبين ريل-تايم
-    roomRef.child('players').on('value', (snapshot) => {
-        const list = document.getElementById('lobbyList');
-        list.innerHTML = "";
-        snapshot.forEach((child) => {
+    roomRef.child('players').on('value', (snap) => {
+        const list = document.getElementById('lobbyList'); list.innerHTML = "";
+        snap.forEach((child) => {
             const p = child.val();
-            list.innerHTML += `
-                <div class="player-item">
-                    <img src="${p.img || 'https://via.placeholder.com/35'}">
-                    <span>${p.name}</span>
-                </div>`;
+            list.innerHTML += `<div class="player-item"><img src="${p.img || ''}"><span>${p.name}</span></div>`;
         });
     });
 
-    // 5. مصفوفة التحديات
-    const challenges = [
-        {t: "مين أكتر حد بتثق فيه هنا؟", type: "truth"},
-        {t: "قول سر محدش يعرفه عنك نهائي", type: "truth"},
-        {t: "ايه أكتر حاجة ندمت عليها في حياتك؟", type: "truth"},
-        {t: "غير صورتك لصورة مضحكة لمدة جولة", type: "dare"},
-        {t: "ابعت رسالة 'بحبك' لأول شخص في الشات عندك", type: "dare"},
-        {t: "غني مقطع من أغنية 'ويجز' دلوقتى", type: "dare"},
-        {t: "لو بقيت غير مرئي لمدة ساعة، هتعمل ايه؟", type: "truth"},
-        {t: "اعترف بحاجة محرجة حصلتلك في المدرسة", type: "truth"}
+    // ---------------------------------------------------------
+    // مصفوفة الأسئلة المحدثة (محتوى مصري ضخم ومتنوع)
+    // ---------------------------------------------------------
+    const truths = [
+        "إيه أكتر موقف محرج حصلك في الميكروباص؟", "لو معاك موبايل الهوست تفتش في إيه أول حاجة؟", "أكتر كذبة كذبتها وأنت صغير وأهلك صدقوها؟",
+        "لو خيروك تتجوز حد من الروم دي، تختار مين؟", "إيه أكتر صفة بتكرهها في نفسك وبتحاول تخبيها؟", "لو لقيت شنطة فيها مليون جنيه هتعمل إيه؟",
+        "مين أكتر لاعب هنا شايفه 'سوسة'؟", "أغرب أكلة جربتها في حياتك؟", "هل عمرك عيطت بسبب فيلم كرتون؟ وإيه هو؟",
+        "مين الشخص اللي لو شاف رسايلك هتروح في داهية؟", "أكتر مرة اتهزقت فيها كانت ليه؟", "لو رجع بيك الزمن هتغير إيه؟",
+        "هل عمرك سرقت حاجة من السوبر ماركت؟", "لو بقيت غير مرئي لساعة هتعمل إيه؟", "مين أول حب في حياتك؟",
+        "مين أكتر حد بتكرهه في العيلة؟", "أكتر إشاعة طلعت عليك وضايقتك؟", "لو بقيت غني جداً، أول حاجة هتشتريها إيه؟",
+        "أغرب مكان نمت فيه قبل كده؟", "إيه هو الحلم اللي مستحيل يتحقق؟", "أكتر مرة خفت فيها من أهلك؟",
+        "لو هتعتذر لشخص، تعتذر لمين وليه؟", "مين أكتر حد هنا بيستفزك؟", "أكتر كلمة بتقولها لما بتتعصب؟",
+        "لو موبايلك وقع في الحمام هتعمل إيه؟", "هل عمرك فتشت في موبايل حد من وراه؟", "أكتر أكلة بتعرف تطبخها؟",
+        "لو خيروك تعيش في بلد تانية، تختار إيه؟", "مين الشخص اللي لو غاب عن حياتك الدنيا تضلم؟", "أكتر فيلم عيطت وأنت بتتفرج عليه؟",
+        "أغلب وقتك بتقضيه في إيه؟", "مين أكتر واحد هنا بيضحكك؟", "أكبر مخاوفك في الحياة؟", "لو طلبوا منك توصف نفسك بكلمة واحدة، هتختار إيه؟",
+        "أكتر اسم دلع بتكرهه؟", "لو معاك تذكرة سفر لواحد بس، تاخد مين معاك؟", "هل أنت شخص بيسامح بسهولة؟", "أكتر موقف خلاك تحس إنك 'قليل الحيلة'؟",
+        "لو هتغير اسمك، تسمي نفسك إيه؟", "مين الشخص اللي بتقوله كل أسرارك؟", "أكتر مرة حسيت فيها بالفخر بنفسك؟",
+        "هل أنت شخص 'عيوطة' في السر؟", "حاجة بتخاف تعملها والناس بتعملها عادي؟", "أكتر أغنية بتسمعها لما بتزعل؟",
+        "مين هنا الشخص اللي مكنتش طايقه وبقيت تحبه؟", "لو هتمثل فيلم، تختار دور إيه؟", "لو هتختار تموت بكرة هتعمل إيه النهاردة؟",
+        "إيه أكتر حاجة ندمان عليها؟", "هل عمرك شربت حاجة من ورا أهلك؟", "مين الشخص اللي مكسوف تروح تكلمه؟",
+        "لو معاك فرصة تبدل حياتك مع حد هنا، تختار مين؟", "أكتر حاجة بتلفت انتباهك في الشخص اللي قدامك؟", "هل أنت شخص بيعترف بغلطه ولا بتكابر؟",
+        "إيه هو سرك اللي محدش يعرفه غيرك؟", "لو بقيت حاكم مصر ليوم واحد، إيه أول قرار هتاخده؟", "أكتر كلمة بتقولها للكراش عشان تثبته؟",
+        "إيه أكتر انطباع غلط الناس بتاخده عنك؟", "لو الحب قدامك دلوقتي، توصفه بإيه؟", "أكتر شخصية مشهورة بتكرها؟",
+        "هل عمرك ندمت إنك عرفت حد في الروم هنا؟", "لو خيروك بين المال والراحة النفسية، تختار إيه؟", "إيه أكتر عادة سيئة بتعملها؟",
+        "مين هنا أكتر واحد 'بتاع محن'؟", "إيه أكتر موقف رومانسي حصلك؟", "هل بتصدق في الحب من أول نظرة؟",
+        "لو حد هددك بصورة ليك، هتعمل إيه؟", "أكتر مرة حسيت فيها إنك غبي؟", "لو معاك 3 أمنيات، تطلب إيه؟",
+        "مين الشخص اللي مستعد تضحي بحياتك عشانه؟", "هل عمرك كذبت عشان تخلص من خناقة؟", "أكتر حاجة بتخليك تحس بالذنب؟",
+        "مين هنا الشخص اللي 'عينه وحشة'؟", "لو بقيت ولد/بنت لمدة يوم واحد، إيه أول حاجة هتعملها؟", "مين أكتر حد شاغل تفكيرك دلوقتي؟",
+        "لو الشخص اللي بتحبه رفضك، هتعمل إيه؟", "إيه أكتر حاجة بتفرحك مهما كنت زعلان؟", "لو قفشت حد بيخونك هتعمل إيه؟"
     ];
 
-    // إرسال التحدي للسيرفر
-    function sendChallenge() {
-        const randomQ = challenges[Math.floor(Math.random() * challenges.length)];
+    const dares = [
+        "غير صورتك لصورة مضحكة لمدة جولة", "ابعت رسالة 'بحبك' لأول شخص في الشات", "غني مهرجان بصوت عالي دلوقتي",
+        "اكتب بوست 'أنا قررت أعتزل الفن' ومسحهوش لمدة ساعة", "اتصل بحد وقوله 'أنا محتاج 1000 جنيه' واقفل", "صور الشاشة وابعت آخر صورة في الاستوديو",
+        "قلد صوت فنان والكل يحزر هو مين", "اشرب كوباية مية بملح دلوقتي", "البس هدومك بالمقلوب وافتح الكاميرا",
+        "ابعت ايموجي 'بوسة' لأكتر حد بتكرهه في الشات", "أوصف كل واحد في الروم بكلمة واحدة", "احكي نكتة ولو محدش ضحك اشرب مية",
+        "اكتب 'أنا ذكي' في ستوري الواتساب", "أقفل الموبايل دقيقة كاملة", "كل معلقة شطة", "اعمل منشن لحد وقوله 'أنت رخم'",
+        "ابعت فويس وأنت بتغني 'يا حبيبي يا بابا'", "أقعد على الأرض لمدة جولة", "كلم حد مشفتوش من زمان وقوله 'وحشتني'",
+        "نزل صورة ليك وأنت صغير دلوقتي", "غير اسمك لـ 'بغبغان' لمدة 10 دقايق", "كل فص ثوم دلوقتي حالا", "اعمل 20 ضغط",
+        "البس طرحة/شال وصور سيلفي وابعتها", "قول 3 حاجات بتكرههم في الهوست", "ابعت سكرين شوت لآخر مكالمة",
+        "كل ليمونة بقشرها", "ارسم شنب بالقلم على وشك وصور سيلفي", "ابعت رسالة 'أنا آسف' لواحد زعلان منه",
+        "اشرب معلقة زيت زيتون", "أقف على رجل واحدة لمدة دقيقتين", "كلم والدك وقوله 'أنا بحبك' وسجل الرد", "اكتب 'أنا في السجن' في ستوري الواتس",
+        "قلد صوت قطة بتخانق", "أعمل 'بلوك' لأقرب حد ليك لمدة دقيقة", "غير لغة الموبايل للصيني لمدة 5 دقائق", "اشرب كوباية مية ساقعة جداً",
+        "ابعت ايموجي 'شبشب' للهوست", "أحكي أكتر موقف محرج حصلك في فرح", "قلد مشهد من فيلم مصري قديم", "كل بصلة صغيرة كاملة",
+        "صور رجلك وابعتها في الشات", "اكتب جملة بالمعكوس والكل يحزرها", "قول 'يا جبل ما يهزك ريح' 10 مرات بسرعة",
+        "ابعت رسالة للاكس (Ex) وقوله 'عامل إيه' وسكرن الرد", "غير خلفية الموبايل لصورة حد هنا لمدة جولة", "أشرب شاي من غير سكر", "أعمل 10 عدات 'سكوات'",
+        "ابعت سكرين لآخر شات بينك وبين الكراش", "اكتب في الـ Bio 'أنا بطلت أعرف ناس' لمدة ساعة", "نزل ستوري 'أنا بحب الهوست' ومنشنه",
+        "ابعت ريكورد لجروب العيلة وأنت بتصوت", "صور آخر 'نوتة' كتبتها في موبايلك وابعتها", "غير صورة البروفايل لصورة 'برص' لمدة 10 دقائق",
+        "ابعت لآخر حد كلمته 'أنا عرفت كل حاجة عنك' واقفل موبايلك", "أشرب بيبسي بملح", "قلد مشهد كوميدي لمحمد سعد",
+        "اكتب 'أنا محتاج حد يربيني' في ستوري الفيس", "ابعت سكرين لآخر بحث عملته في اليوتيوب", "ألبس شرابين مختلفين وصورهم",
+        "أقعد تحت الترابيزة لمدة جولة كاملة", "كلم أعز صحابك وقوله 'أنا بكرهك' وبعدين قوله إنه مقلب",
+        "أعمل فويس وأنت بتقلد صوت بيبي بيعيط", "غير اسمك لـ 'بتاع محن' لمدة 10 دقائق", "ارسم قلب على جبهتك وصور سيلفي",
+        "ابعت رسالة لأهلك قولهم 'أنا اتجوزت' وسكرن الرد", "أشرب كوباية مية من غير ما تستخدم إيدك",
+        "قلد طريقة مشي الهوست دلوقتي", "اكتب 'أنا فاشل' في ستوري الانستجرام"
+    ];
+
+    function botGenerate() {
+        const isTruth = Math.random() > 0.5;
+        const pool = isTruth ? truths : dares;
+        const result = pool[Math.floor(Math.random() * pool.length)];
+
         roomRef.child('currentAction').set({
-            q: randomQ.t,
-            type: randomQ.type,
-            sender: myName,
-            timestamp: Date.now()
+            q: result,
+            type: isTruth ? "truth" : "dare",
+            sender: "البوت الذكي 🤖",
+            ts: Date.now()
         });
     }
 
-    // استقبال التحدي عند كل اللاعبين
-    roomRef.child('currentAction').on('value', (snapshot) => {
-        const data = snapshot.val();
-        if(data) {
+    roomRef.child('currentAction').on('value', (snap) => {
+        const d = snap.val();
+        if(d) {
             const card = document.getElementById('mainCard');
             const label = document.getElementById('cardLabel');
-            
-            card.classList.remove('truth', 'dare');
-            card.classList.add(data.type);
-            
-            label.innerText = data.type === 'truth' ? "صراحة" : "جرأة";
+            card.className = "challenge-card " + d.type;
+            label.innerText = d.type === 'truth' ? "صراحة" : "جرأة";
             label.style.display = "block";
-            label.style.background = data.type === 'truth' ? "var(--neon)" : "var(--spy)";
-            
-            document.getElementById('questionText').innerText = data.q;
-            document.getElementById('senderName').innerText = "بواسطة: " + data.sender;
-            
-            // قفل الزرار مؤقتاً عشان الهبد
+            label.style.background = d.type === 'truth' ? "var(--neon)" : "var(--spy)";
+            document.getElementById('questionText').innerText = d.q;
+            document.getElementById('senderName').innerText = "بواسطة: " + d.sender;
             const btn = document.getElementById('spinBtn');
             btn.disabled = true;
-            setTimeout(() => { btn.disabled = false; }, 3000);
+            setTimeout(() => btn.disabled = false, 2000);
         }
     });
 
-    // 6. الشات الأونلاين
     function sendMsg() {
-        const input = document.getElementById('chatInput');
-        if(input.value.trim()) {
-            roomRef.child('messages').push({ user: myName, text: input.value });
-            input.value = "";
+        const inp = document.getElementById('chatInput');
+        if(inp.value.trim()) {
+            roomRef.child('messages').push({ user: myName, text: inp.value });
+            inp.value = "";
         }
     }
 
-    roomRef.child('messages').limitToLast(15).on('child_added', (snapshot) => {
-        const m = snapshot.val();
-        const box = document.getElementById('chatBox');
-        const isMe = m.user === myName;
-        box.innerHTML += `<div class="chat-msg ${isMe ? 'me' : ''}"><b>${m.user}:</b> ${m.text}</div>`;
-        box.scrollTop = box.scrollHeight;
+    roomRef.child('messages').limitToLast(20).on('child_added', (snap) => {
+        const m = snap.val();
+        document.getElementById('chatBox').innerHTML += `<div class="chat-msg ${m.user === myName ? 'me' : ''}"><b>${m.user}:</b> ${m.text}</div>`;
+        document.getElementById('chatBox').scrollTop = 10000;
     });
-
 </script>
 </body>
 </html>
